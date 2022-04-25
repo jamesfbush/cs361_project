@@ -4,6 +4,8 @@ __pycache__/
 #.env files
 .env
 
+#virtual environment
+env/
 
 # Flask stuff:
 instance/
