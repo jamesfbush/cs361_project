@@ -1,0 +1,20 @@
+{% extends "main.j2" %}
+{% block title %}Index{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+        .important { color: #336699; }
+    </style>
+{% endblock %}
+{% block content %}
+    <h1>FAQ</h1>
+    <p><strong>
+      Q: Is it OK to ask questions?
+    </strong></p>
+    <p>
+      A: Absolutely.
+    </p>
+    {% for i in clients%}
+        <p>{{ i }}</p>
+    {% endfor %}
+{% endblock %}

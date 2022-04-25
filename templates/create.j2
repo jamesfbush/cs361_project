@@ -1,0 +1,92 @@
+{% extends "main.j2" %}
+{% block title %}Index{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+        .important { color: #336699; }
+    </style>
+{% endblock %}
+{% block content %}
+
+    <h1>Create {{ entity }}</h1>
+
+    {# --- Create success --- #}
+    {% if data == "success" %}
+    <p> {{ entity }} successfully created</p>
+
+    {% else %}
+    {# --- Create new --- #}
+
+    <p><strong>Create new</strong></p>
+    <div>
+    <form action="/{{ entity.lower() }}/create" method="POST">
+
+        {# --- Clients --- #}
+        {% if entity == "Clients" %}
+            <label for="clientOrganizationName">Client organization name</label><br><br>
+                <input type="text" name="clientOrganizationName"><br><br>
+
+            <label for="clientContactFirstName">Client contact first name</label><br><br>
+                <input type="text" name="clientContactFirstName"><br><br>
+
+            <label for="clientContactLastName">Client contact last name</label><br><br>
+                <input type="text" name="clientContactLastName"><br><br>
+
+            <label for="clientContactEmail">Client contact email</label><br><br>
+                <input type="text" name="clientContactEmail"><br><br>
+
+
+        {# --- Projects --- #}
+        {% elif entity == "Projects" %}
+            <label for="clientId">Client ID</label><br><br>
+                <input type="text" name="clientId"><br><br>
+
+            <label for="projectDescription">Project description</label><br><br>
+                <input type="text" name="projectDescription"><br><br>
+
+            <label for="projectBillRate">Project bill rate</label><br><br>
+                <input type="number" name="projectBillRate"><br><br>
+
+        {# --- Employees --- #}
+        {% elif entity == "Employees" %}
+            <label for="eeFirstName">Employee first name</label><br><br>
+                <input type="text" name="eeFirstName"><br><br>
+
+            <label for="eeLastName">Employee last name</label><br><br>
+                <input type="text" name="eeLastName"><br><br>
+
+            <label for="eePosition">Employee position</label><br><br>
+                <input type="text" name="eePosition"><br><br>
+
+            <input type="radio" id="current" name="eeStatus" value="True">
+            <label for="current">Current employee</label><br>
+
+            <input type="radio" id="former" name="eeStatus" value="False">
+            <label for="former">Former employee</label><br>
+
+
+
+
+        {# --- Tasks --- #}
+        {% elif entity == "Tasks" %}
+            <label for="projectId">Project ID</label><br><br>
+                <input type="text" name="projectId"><br><br>
+
+            <label for="taskDescription">Task description</label><br><br>
+                <input type="text" name="taskDescription"><br><br>
+
+            <label for="taskTime">Task time</label><br><br>
+                <input type="number" name="taskTime"><br><br>
+
+            <label for="eeId">Employee ID</label><br><br>
+                <input type="number" name="eeId"><br><br>
+
+        {% endif %}
+        <input type="submit" value="Submit">
+    </form> 
+    </div>
+    
+    {# success/create conditional #}
+    {% endif %}
+
+{% endblock %}
