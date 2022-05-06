@@ -189,6 +189,8 @@ def tasksCreate():
 
 
 # ---------- API ---------- 
+
+# ------- timeDelta -------
 @app.route('/api/timeDelta',methods=["GET"])
 def timeDeltaAPI():
 
@@ -215,6 +217,11 @@ def timeDeltaAPI():
                 '.../api/timeDelta?startTime=1577865600&endTime=1641121445'<br><br>\
                     where startTime and endTime values are Unix timestamps.",404)
 
+# ------- create -------
+@app.route('/api/<entity>/create',methods=["POST"])
+def apiCreate(entity):
+
+# ------- retrieve -------
 
 @app.route('/api/<entity>/retrieve',methods=["GET"])
 def apiRetrieve(entity):
@@ -273,6 +280,14 @@ def apiRetrieve(entity):
             # Else, return error 
             return ("ERROR: malformed request",404)
 
+
+# ------- update -------
+@app.route('/api/<entity>/update',methods=["POST"])
+def apiUpdate(entity):
+
+# ------- delete -------
+@app.route('/api/<entity>/delete',methods=["POST"])
+def apiDelete(entity):
 
 
 # ---------- Help ---------- 
