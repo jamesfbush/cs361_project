@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy 
 from dotenv import load_dotenv, find_dotenv
 import os 
+from datetime import datetime as dt
 from models import Clients, Projects, Employees, Tasks, prepopulateDatabase 
 
 
@@ -12,7 +13,6 @@ app = Flask(__name__)
 # https://flask-sqlalchemy.palletsprojects.com/en/2.x/quickstart/
 
 # Configure database 
-
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db' # SQLite
 # app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql://{user}:{passwd}@{host}/{db}' # MySQL
 
@@ -27,12 +27,7 @@ prepopulateDatabase()
 
 
 
-# CRUD operations 
-# def create():
-# def retrieve():
-# def update(): 
-# def delete(): 
-
+# CRUD operations? 
 
 
 # ---------- Home ---------- 
@@ -49,7 +44,8 @@ def clients():
 
 @app.route('/clients/retrieve',methods=["GET"])
 def clientsRetrieve():
-    results = Clients.query.all()
+    results = retrieve(Clients, "all")
+    # results = Clients.query.all()
     columns = Clients.__table__.columns.keys() # https://stackoverflow.com/questions/6455560/how-to-get-column-names-from-sqlalchemy-result-declarative-syntax
 
     return render_template("retrieve.j2", entity="Clients", data=[columns, results]) #data=[columns, results] 
@@ -192,12 +188,99 @@ def tasksCreate():
         return render_template("create.j2", entity="Tasks", data="success")
 
 
+# ---------- API ---------- 
+@app.route('/api/timeDelta',methods=["GET"])
+def timeDeltaAPI():
+
+    if request.method == "GET": 
+        if len(request.args) > 0:
+            # Extract startTime and endTime from API call  
+            startTime = dt.fromtimestamp(int(request.args['startTime']))
+            endTime = dt.fromtimestamp(int(request.args['endTime'] ))
+
+            # Calculate the timeDelta down to total seconds 
+            totalSeconds = int((endTime - startTime).total_seconds()) 
+
+            # Calculate days, hours, minutes, seconds for dict
+            timeDelta = {"timeDelta": { "days": totalSeconds // (60*60*24),
+                                        "hours": (totalSeconds - (totalSeconds // (60*60*24))*60*60*24) // (60*60),
+                                        "minutes": (totalSeconds % 3600) // 60,
+                                        "seconds": totalSeconds % 60
+                                    }
+                        }
+            # Return JSON 
+            return jsonify(timeDelta)
+        else:
+            return ("Call API in following format:<br><br>\
+                '.../api/timeDelta?startTime=1577865600&endTime=1641121445'<br><br>\
+                    where startTime and endTime values are Unix timestamps.",404)
+
+
+@app.route('/api/<entity>/retrieve',methods=["GET"])
+def apiRetrieve(entity):
+
+    # map passed entity to db object 
+    entityDict = {  'tasks':Tasks, 
+                    'projects':Projects, 
+                    'clients':Clients, 
+                    'employees':Employees
+                }
+    entityObj = entityDict[entity] 
+
+    if request.method == "GET": 
+
+        # URL request to retrieveAll 
+        if 'retrieveAll' in request.args.keys() and len(request.args.keys()) == 1:
+            query = entityObj.query.all()
+            results = {entity:[i.getData() for i in query]}
+
+            return (jsonify(results),200)
+
+        # Retrieve based on URL-specified filter 
+        elif len(request.args.keys()) >= 1:
+
+            # Set relevant entity columns 
+            cols = entityObj.__table__.columns.keys()
+
+            # Extract attributes passed in URL to set filter cols 
+            filters = [col for col in request.args.keys() if col in cols]
+            if len(filters) > 0:
+                # Declare results 
+                results = {entity:[]}
+                
+                # Query db based on attributes/values in URL
+                for i in filters:
+                    # Attribute passed in URL 
+                    attr = getattr(entityObj,i) 
+                    #  Value passed in URL 
+                    val = request.args[i] 
+                    # Numeric values require exact match
+                    if val.isnumeric():
+                        query = entityObj.query.filter(attr==val).all()
+                    # Non-numeric values allow like match
+                    elif val.isnumeric() is False:
+                        query = entityObj.query.filter(attr.like(f'%{val}%')).all()
+                    # Add each unique query result to results dict
+                    for result in query:
+                        if result not in results[entity] and i is not None:
+                            results[entity].append(result.getData())
+                # No results, return 204 Not Found 
+                if len(results[entity]) == 0:
+                    return (jsonify(results),204)
+                # Results found, return 200
+                return (jsonify(results),200)
+
+            # Else, return error 
+            return ("ERROR: malformed request",404)
+
+
 
 # ---------- Help ---------- 
 @app.route('/help',methods=["GET"])
 def appHelp():
     if request.method == "GET": 
             return render_template("help.j2", entity="Help")
+
 
 # ---------- Help ---------- 
 @app.route('/faq',methods=["GET"])
@@ -206,7 +289,7 @@ def appFaq():
             return render_template("faq.j2", entity="Help")
 
 
-
+# ---------- Confirmation ---------- 
 @app.route('/confirmation',methods=["GET"])
 def confirmation():
     if request.method == "GET": 

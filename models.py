@@ -40,6 +40,15 @@ class Clients(db.Model):
     def __repr__(self):
         #return '<User %r>' % self.username
         return f'clientId: {self.clientId}, clientContactFirstName: {self.clientContactFirstName}'
+    # Return dict of all columns and values
+
+    def getData(self):
+        return dict({   'clientId':self.clientId,
+                        'clientOrganizationName':self.clientOrganizationName,
+                        'clientContactFirstName':self.clientContactFirstName,
+                        'clientContactLastName':self.clientContactLastName,
+                        'clientContactEmail':self.clientContactEmail
+                })
 
 
 class Projects(db.Model):
@@ -47,10 +56,21 @@ class Projects(db.Model):
     clientId = db.Column(db.Integer, db.ForeignKey(Clients.clientId), nullable=False) # https://stackoverflow.com/questions/18807322/sqlalchemy-foreign-key-relationship-attributes
     projectDescription = db.Column(db.String(120),nullable=False)
     projectBillRate = db.Column(db.Numeric(6,2), nullable=False) # https://stackoverflow.com/a/42428259
+   
     # Returns information about object when called 
     def __repr__(self):
-
         return f'projectId: {self.projectId}, projectBillRate: {self.projectBillRate}'
+    
+    # Return dict of all columns and values
+    def getData(self):
+        return dict({'projectId':self.projectId,
+                'clientId':self.clientId,
+                'projectDescription':self.projectDescription,
+                'projectBillRate':float(self.projectBillRate)
+                })
+
+
+
 
 class Employees(db.Model):
     eeId = db.Column(db.Integer, primary_key=True, nullable=False, unique=True) #Auto increment? 
@@ -62,6 +82,17 @@ class Employees(db.Model):
     def __repr__(self):
 
         return f'eeId: {self.eeId}, eeFirstName: {self.eeFirstName}, eeLastName: {self.eeLastName}'
+    # Return dict of all columns and values
+    def getData(self):
+        return dict({   'eeId':self.eeId,
+                        'eeFirstName':self.eeFirstName,
+                        'eeLastName':self.eeLastName,
+                        'eePosition':self.eePosition,
+                        'eeStatus':self.eeStatus
+                })
+
+
+
 
 class Tasks(db.Model):
     taskId = db.Column(db.Integer, primary_key=True, nullable=False, unique=True) #Auto increment? 
@@ -71,8 +102,16 @@ class Tasks(db.Model):
     eeId = db.Column(db.Integer, db.ForeignKey(Employees.eeId), nullable=False)
     # Returns information about object when called 
     def __repr__(self):
-
         return f'taskId: {self.taskId}, taskDescription: {self.taskDescription}'
+
+    # Return dict of all columns and values
+    def getData(self):
+        return dict({'taskId':self.taskId,
+                'projectId':self.projectId,
+                'taskDescription':self.taskDescription,
+                'taskTime':float(self.taskTime),
+                'eeId':self.eeId
+                })
 
 def prepopulateDatabase():
     # Create new schema 

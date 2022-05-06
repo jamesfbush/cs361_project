@@ -85,7 +85,7 @@ tr:nth-child(even) {
   width: 90%;
   margin: 0 auto;
   display: flex;
-  max-width: 1200px;
+  max-width: 1700px;
   flex-direction: row;
   justify-content: center;
   flex-wrap: wrap;
@@ -93,18 +93,18 @@ tr:nth-child(even) {
 }
 
 .flex-container > div {
-  width: 260px;
-  height: 162.5px;
+  width: 275px;
+  height: 171.875px;
   text-align: center;
   background-color: #fffefe;
   margin: 20px;
-  padding: 20px;
+  padding: 25px;
   border-radius: 5px;
 }
 
 .optionsContainer {
   text-align: center;
-  max-width: 1200px;
+  max-width: 1700px;
   background-color: #fffefe;
   border: 1px solid #e2e2e2;
   padding: 20px;
