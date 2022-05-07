@@ -5,7 +5,7 @@ GET http://localhost:5000/api/timeDelta?startTime=1577865600&endTime=1641121445
 ###taskTrack API
 GET http://localhost:5000/api/tasks/retrieve?retrieveAll
 
-###
+### tasks eeid=1, taskId=2
 GET http://localhost:5000/api/tasks/retrieve?eeId=1&taskId=2
 
 
@@ -13,7 +13,11 @@ GET http://localhost:5000/api/tasks/retrieve?eeId=1&taskId=2
 GET http://localhost:5000/api/projects/retrieve?projectId=1&clientId=3
 
 ### Employees - eeId=2, eeFirstName='Brandi'
-GET http://localhost:5000/api/employees/retrieve?eeId=2&eeFirstName=b
+GET http://localhost:5000/api/employees/retrieve?eeId=2&eeFirstName=Brandi
 
 ### Tasks - taskId=1, taskDescription=ee
-GET http://localhost:5000/api/tasks/retrieve?taskDescription=eE
+GET http://localhost:5000/api/tasks/retrieve?taskId=1
+
+
+###
+DELETE http://localhost:5000/api/tasks/delete?taskId=1

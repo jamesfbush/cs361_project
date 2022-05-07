@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv, find_dotenv
 import os 
 from datetime import datetime as dt
-from models import Clients, Projects, Employees, Tasks, prepopulateDatabase 
+from models import Clients, Projects, Employees, Tasks, prepopulateDatabase, deleteEntity
 
 
 # Flask object
@@ -220,6 +220,7 @@ def timeDeltaAPI():
 # ------- create -------
 @app.route('/api/<entity>/create',methods=["POST"])
 def apiCreate(entity):
+    pass
 
 # ------- retrieve -------
 
@@ -282,12 +283,33 @@ def apiRetrieve(entity):
 
 
 # ------- update -------
-@app.route('/api/<entity>/update',methods=["POST"])
+@app.route('/api/<entity>/update',methods=["DELETE"])
 def apiUpdate(entity):
+    pass
 
 # ------- delete -------
-@app.route('/api/<entity>/delete',methods=["POST"])
+@app.route('/api/<entity>/delete',methods=["DELETE"])
 def apiDelete(entity):
+    # Query by id 
+    entityDict = {  'tasks':Tasks, 
+                    'projects':Projects, 
+                    'clients':Clients, 
+                    'employees':Employees
+                }
+    entityObj = entityDict[entity] 
+    entityIdKey = list(request.args.keys())[0]
+
+    attr = getattr(entityObj,list(request.args.keys())[0])
+
+    entityIdVal = request.args[entityIdKey]
+    # entityId = request.args[request.args.keys()[0]]
+    print("**",entityIdKey, entityIdVal)
+    query = entityObj.query.filter(attr==1).first() #entityIdKey==int(entityIdVal)
+    
+    # Delete
+    deleteEntity(query)
+
+    return (jsonify("deleted"),200)
 
 
 # ---------- Help ---------- 

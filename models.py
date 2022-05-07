@@ -38,11 +38,13 @@ class Clients(db.Model):
 
     # Returns information about object when called 
     def __repr__(self):
+        """Return information about object when called"""
         #return '<User %r>' % self.username
         return f'clientId: {self.clientId}, clientContactFirstName: {self.clientContactFirstName}'
     # Return dict of all columns and values
 
     def getData(self):
+        """Return dict of all columns and values"""
         return dict({   'clientId':self.clientId,
                         'clientOrganizationName':self.clientOrganizationName,
                         'clientContactFirstName':self.clientContactFirstName,
@@ -59,10 +61,12 @@ class Projects(db.Model):
    
     # Returns information about object when called 
     def __repr__(self):
+        """Return information about object when called"""
         return f'projectId: {self.projectId}, projectBillRate: {self.projectBillRate}'
     
     # Return dict of all columns and values
     def getData(self):
+        """Return dict of all columns and values"""
         return dict({'projectId':self.projectId,
                 'clientId':self.clientId,
                 'projectDescription':self.projectDescription,
@@ -78,12 +82,15 @@ class Employees(db.Model):
     eeLastName = db.Column(db.String(35), nullable=False)
     eePosition = db.Column(db.String(35), nullable=False)
     eeStatus = db.Column(db.Boolean, nullable=False)
-    # Returns information about object when called 
-    def __repr__(self):
 
+    
+    def __repr__(self):
+        """Return information about object when called"""
         return f'eeId: {self.eeId}, eeFirstName: {self.eeFirstName}, eeLastName: {self.eeLastName}'
-    # Return dict of all columns and values
+
+    
     def getData(self):
+        """Return dict of all columns and values"""
         return dict({   'eeId':self.eeId,
                         'eeFirstName':self.eeFirstName,
                         'eeLastName':self.eeLastName,
@@ -102,10 +109,12 @@ class Tasks(db.Model):
     eeId = db.Column(db.Integer, db.ForeignKey(Employees.eeId), nullable=False)
     # Returns information about object when called 
     def __repr__(self):
+        """Return information about object when called"""
         return f'taskId: {self.taskId}, taskDescription: {self.taskDescription}'
 
     # Return dict of all columns and values
     def getData(self):
+        """Return dict of all columns and values"""
         return dict({'taskId':self.taskId,
                 'projectId':self.projectId,
                 'taskDescription':self.taskDescription,
@@ -210,6 +219,30 @@ def prepopulateDatabase():
     db.session.commit()
     # for i in (Tasks.query.all()):
     #     print(i)
+
+def createEntity(entityObj):
+    """
+    Delete entity from the database. 
+
+    Keyword arguments:
+    entityObj -- entity object from app passed as result of query
+    """
+ 
+    db.session.delete(entityObj)
+    db.session.commit()
+
+
+def deleteEntity(entityObj):
+    """
+    Delete entity from the database. 
+
+    Keyword arguments:
+    entityObj -- entity object from app passed as result of query
+    """
+ 
+    db.session.delete(entityObj)
+    db.session.commit()
+
 
 
 
