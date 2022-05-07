@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv, find_dotenv
 import os 
 from datetime import datetime as dt
-from models import Clients, Projects, Employees, Tasks, prepopulateDatabase, deleteEntity
+from models import Clients, Projects, Employees, Tasks, prepopulateDatabase, getSesssion
 
 
 # Flask object
@@ -59,7 +59,7 @@ def clientsCreate():
         return render_template("create.j2", entity="Clients", data=[]) #data=[columns, results] 
 
     if request.method == "POST":
-        formData = list(request.form.values())
+        formData = list(request.json.values())
 
         #https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
  
@@ -97,7 +97,7 @@ def projectsCreate():
         return render_template("create.j2", entity="Projects", data=[]) #data=[columns, results] 
 
     if request.method == "POST":
-        formData = list(request.form.values())
+        formData = list(request.json.values())
 
         #https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
  
@@ -134,7 +134,7 @@ def employeesCreate():
         return render_template("create.j2", entity="Employees", data=[]) #data=[columns, results] 
 
     if request.method == "POST":
-        formData = list(request.form.values())
+        formData = list(request.json.values())
 
         #https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
  
@@ -173,7 +173,7 @@ def tasksCreate():
         return render_template("create.j2", entity="Tasks", data=[]) #data=[columns, results] 
 
     if request.method == "POST":
-        formData = list(request.form.values())
+        formData = list(request.json.values())
 
         #https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
  
@@ -189,6 +189,14 @@ def tasksCreate():
 
 
 # ---------- API ---------- 
+def mapEntity(entity):
+    # map passed entity to db object 
+    entityDict = {  'tasks':Tasks, 
+                    'projects':Projects, 
+                    'clients':Clients, 
+                    'employees':Employees
+                }
+    return entityDict[entity]
 
 # ------- timeDelta -------
 @app.route('/api/timeDelta',methods=["GET"])
@@ -220,7 +228,40 @@ def timeDeltaAPI():
 # ------- create -------
 @app.route('/api/<entity>/create',methods=["POST"])
 def apiCreate(entity):
-    pass
+    print(request.json) #note there is a difference between request.json and request.json
+    # # Map passed entity to entityObj
+    entityObj = mapEntity(entity)
+
+    # # Get db session 
+    session = getSesssion()
+
+    # # # Declare the new entity to add 
+    if entity == "clients":
+        newEntity =  entityObj(clientOrganizationName=request.json['clientOrganizationName'], 
+                            clientContactFirstName=request.json['clientContactFirstName'], 
+                            clientContactLastName=request.json['clientContactLastName'], 
+                            clientContactEmail=request.json['clientContactEmail']
+                        )
+    elif entity == "projects":
+        newEntity = entityObj(  clientId=request.json['clientId'],
+                                projectDescription=request.json['projectDescription'],
+                                projectBillRate=request.json['projectBillRate']
+                        )
+    elif entity == "tasks":
+        newEntity = entityObj(  projectId=request.json['projectId'],
+                                taskDescription=request.json['taskDescription'],
+                                taskTime=request.json['taskTime'],
+                                eeId=request.json['eeId'] 
+                            )
+      
+        
+    elif entity == "employees":
+        newEntity = entityObj(  )
+        pass
+
+    session.add(newEntity)
+    session.commit()
+    return str(request.json)
 
 # ------- retrieve -------
 
@@ -228,12 +269,12 @@ def apiCreate(entity):
 def apiRetrieve(entity):
 
     # map passed entity to db object 
-    entityDict = {  'tasks':Tasks, 
-                    'projects':Projects, 
-                    'clients':Clients, 
-                    'employees':Employees
-                }
-    entityObj = entityDict[entity] 
+    # entityDict = {  'tasks':Tasks, 
+    #                 'projects':Projects, 
+    #                 'clients':Clients, 
+    #                 'employees':Employees
+    #             }
+    entityObj = mapEntity(entity) 
 
     if request.method == "GET": 
 
@@ -283,31 +324,30 @@ def apiRetrieve(entity):
 
 
 # ------- update -------
-@app.route('/api/<entity>/update',methods=["DELETE"])
+@app.route('/api/<entity>/update',methods=["PUT"])
 def apiUpdate(entity):
     pass
 
 # ------- delete -------
 @app.route('/api/<entity>/delete',methods=["DELETE"])
 def apiDelete(entity):
-    # Query by id 
-    entityDict = {  'tasks':Tasks, 
-                    'projects':Projects, 
-                    'clients':Clients, 
-                    'employees':Employees
-                }
-    entityObj = entityDict[entity] 
+    # Map passed entity to a db entity 
+    entityObj = mapEntity(entity)
+
     entityIdKey = list(request.args.keys())[0]
 
     attr = getattr(entityObj,list(request.args.keys())[0])
 
     entityIdVal = request.args[entityIdKey]
-    # entityId = request.args[request.args.keys()[0]]
-    print("**",entityIdKey, entityIdVal)
+
     query = entityObj.query.filter(attr==1).first() #entityIdKey==int(entityIdVal)
     
+    print("Deleting:",entityIdKey, entityIdVal)
+
     # Delete
-    deleteEntity(query)
+    session = getSesssion()
+    session.delete(query)
+    session.commit()
 
     return (jsonify("deleted"),200)
 
