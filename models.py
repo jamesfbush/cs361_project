@@ -51,6 +51,13 @@ class Clients(db.Model):
                         'clientContactLastName':self.clientContactLastName,
                         'clientContactEmail':self.clientContactEmail
                 })
+    def setData(self,columnName,columnVal):
+        col = getattr(self, columnName)
+        print(col)
+        col = columnVal
+        print(col)
+        # print(self.clientContactFirstName)
+
 
 
 class Projects(db.Model):

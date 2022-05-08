@@ -2,6 +2,7 @@
 ####timeDelta API
 GET http://localhost:5000/api/timeDelta?startTime=1577865600&endTime=1641121445
 
+
 ###taskTrack API
 GET http://localhost:5000/api/tasks/retrieve?retrieveAll
 ### Retrieve all clients
@@ -13,11 +14,12 @@ GET http://localhost:5000/api/projects/retrieve?retrieveAll
 ### Retrieve all tasks
 GET http://localhost:5000/api/tasks/retrieve?retrieveAll
 
+### Retrieve all employees
+GET http://localhost:5000/api/employees/retrieve?retrieveAll
 
 
-### tasks eeid=1, taskId=2
+### Retrieve by search parameters - tasks - eeid=1, taskId=2
 GET http://localhost:5000/api/tasks/retrieve?eeId=1&taskId=2
-
 
 ### Projects - projectId=1, clientid=3
 GET http://localhost:5000/api/projects/retrieve?projectId=1&clientId=3
@@ -25,26 +27,32 @@ GET http://localhost:5000/api/projects/retrieve?projectId=1&clientId=3
 ### Employees - eeId=2, eeFirstName='Brandi'
 GET http://localhost:5000/api/employees/retrieve?eeId=2&eeFirstName=Brandi
 
-### Tasks - taskId=1, taskDescription=ee
-GET http://localhost:5000/api/tasks/retrieve?taskId=1
+### Partial search term - Tasks - taskId=1, taskDescription=ee
+GET http://localhost:5000/api/tasks/retrieve?taskId=1&taskDescription=ee
 
 
-###
+### Delete - Tasks - delete by ID ** note: only way to do it 
 DELETE http://localhost:5000/api/tasks/delete?taskId=1
 
-### Add new client
-POST http://localhost:5000/api/clients/create
+### Retrieve all Tasks
+GET http://localhost:5000/api/tasks/retrieve?retrieveAll
 
-### 
+
+
+### Create - new Client
 POST http://localhost:5000/api/clients/create HTTP/1.1
 content-type: application/json
 
 {
-    "clientOrganizationName":"Enron",
-    "clientContactFirstName":"Kenneth",
-    "clientContactLastName":"Lay",
-    "clientContactEmail":"kl@enron.com"
+    "clientOrganizationName":"House of Woodcock",
+    "clientContactFirstName":"Reynolds",
+    "clientContactLastName":"Woodcock",
+    "clientContactEmail":"rjw@example.co.uk"
 }
+
+### Find the Task
+GET http://localhost:5000/api/clients/retrieve?clientOrganizationName=house
+
 
 ### Add new project
 POST http://localhost:5000/api/projects/create HTTP/1.1
@@ -55,6 +63,8 @@ content-type: application/json
     "projectDescription":"carrying all kinds of heavy stuff",
     "projectBillRate":33.98
 }
+### Find the Project
+GET http://localhost:5000/api/projects/retrieve?projectDescription=carrying
 
 ### Add new task 
 POST http://localhost:5000/api/tasks/create HTTP/1.1
@@ -66,8 +76,36 @@ content-type: application/json
     "taskTime":2.3,
     "eeId":2
 }
+
+### Find the Task
+GET http://localhost:5000/api/tasks/retrieve?taskDescription=jumping
+
 ### Add new employee
-POST http://localhost:5000/api/employees/create?
+POST http://localhost:5000/api/employees/create HTTP/1.1
+content-type: application/json
+
+{
+    "eeFirstName":"Kenneth",
+    "eeLastName":"Lay",
+    "eePosition":"CEO",
+    "eeStatus":0
+}
+
+### Find the Employee
+GET http://localhost:5000/api/employees/retrieve?eeFirstName=Kenneth
 
 
+### Update Clients 
+PUT http://localhost:5000/api/clients/update?clientId=4 HTTP/1.1
+content-type: application/json
 
+{
+    "clientContactFirstName": "Chuck"
+
+}
+
+### Find the Employee
+GET http://localhost:5000/api/clients/retrieve?clientContactFirstName=Charles
+
+### Check update
+GET http://localhost:5000/api/clients/retrieve?clientContactFirstName=Chuck

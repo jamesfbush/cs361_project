@@ -228,7 +228,9 @@ def timeDeltaAPI():
 # ------- create -------
 @app.route('/api/<entity>/create',methods=["POST"])
 def apiCreate(entity):
-    print(request.json) #note there is a difference between request.json and request.json
+    
+    #note there is a difference between request.json and request.json
+
     # # Map passed entity to entityObj
     entityObj = mapEntity(entity)
 
@@ -253,80 +255,143 @@ def apiCreate(entity):
                                 taskTime=request.json['taskTime'],
                                 eeId=request.json['eeId'] 
                             )
-      
         
     elif entity == "employees":
-        newEntity = entityObj(  )
-        pass
+        newEntity = entityObj(  eeFirstName=request.json['eeFirstName'],
+                                eeLastName=request.json['eeLastName'],
+                                eePosition=request.json['eePosition'],
+                                eeStatus=request.json['eeStatus']
 
+                            )
+    # add and commit the change, return a success code 
     session.add(newEntity)
     session.commit()
-    return str(request.json)
+    return (f"{entity} created",201)
 
 # ------- retrieve -------
 
 @app.route('/api/<entity>/retrieve',methods=["GET"])
-def apiRetrieve(entity):
+def apiRetrieve(entity, internal=None):
 
     # map passed entity to db object 
-    # entityDict = {  'tasks':Tasks, 
-    #                 'projects':Projects, 
-    #                 'clients':Clients, 
-    #                 'employees':Employees
-    #             }
     entityObj = mapEntity(entity) 
 
-    if request.method == "GET": 
+    # URL request to retrieveAll 
+    if 'retrieveAll' in request.args.keys() and len(request.args.keys()) == 1:
+        query = entityObj.query.all()
+        results = {entity:[i.getData() for i in query]}
 
-        # URL request to retrieveAll 
-        if 'retrieveAll' in request.args.keys() and len(request.args.keys()) == 1:
-            query = entityObj.query.all()
-            results = {entity:[i.getData() for i in query]}
+        return (jsonify(results),200)
 
+    # Retrieve based on URL-specified filter 
+    elif len(request.args.keys()) >= 1:
+
+        # Set relevant entity columns 
+        cols = entityObj.__table__.columns.keys()
+
+        # Extract attributes passed in URL to set filter cols 
+        filters = [col for col in request.args.keys() if col in cols]
+        if len(filters) > 0:
+            # Declare results 
+            results = {entity:[]}
+            
+            # Query db based on attributes/values in URL
+            for i in filters:
+                # Attribute passed in URL 
+                attr = getattr(entityObj,i) 
+                #  Value passed in URL 
+                val = request.args[i] 
+                # Numeric values require exact match
+                if val.isnumeric():
+                    query = entityObj.query.filter(attr==val).all()
+                # Non-numeric values allow like match
+                elif val.isnumeric() is False:
+                    query = entityObj.query.filter(attr.like(f'%{val}%')).all()
+                # Add each unique query result to results dict
+                for result in query:
+                    if result not in results[entity] and i is not None:
+                        results[entity].append(result.getData())
+            # No results, return 204 Not Found 
+            if len(results[entity]) == 0:
+                return (jsonify(results),204)
+            # Results found, return 200
             return (jsonify(results),200)
 
-        # Retrieve based on URL-specified filter 
-        elif len(request.args.keys()) >= 1:
-
-            # Set relevant entity columns 
-            cols = entityObj.__table__.columns.keys()
-
-            # Extract attributes passed in URL to set filter cols 
-            filters = [col for col in request.args.keys() if col in cols]
-            if len(filters) > 0:
-                # Declare results 
-                results = {entity:[]}
-                
-                # Query db based on attributes/values in URL
-                for i in filters:
-                    # Attribute passed in URL 
-                    attr = getattr(entityObj,i) 
-                    #  Value passed in URL 
-                    val = request.args[i] 
-                    # Numeric values require exact match
-                    if val.isnumeric():
-                        query = entityObj.query.filter(attr==val).all()
-                    # Non-numeric values allow like match
-                    elif val.isnumeric() is False:
-                        query = entityObj.query.filter(attr.like(f'%{val}%')).all()
-                    # Add each unique query result to results dict
-                    for result in query:
-                        if result not in results[entity] and i is not None:
-                            results[entity].append(result.getData())
-                # No results, return 204 Not Found 
-                if len(results[entity]) == 0:
-                    return (jsonify(results),204)
-                # Results found, return 200
-                return (jsonify(results),200)
-
-            # Else, return error 
-            return ("ERROR: malformed request",404)
+        # Else, return error 
+        return ("ERROR: malformed request",404)
 
 
 # ------- update -------
 @app.route('/api/<entity>/update',methods=["PUT"])
 def apiUpdate(entity):
-    pass
+
+    # map passed entity to db object, extract entityIdKey, entityIdVal
+    entityObj = mapEntity(entity) 
+    entityIdKey =  str(list(request.args.keys())[0]) 
+    entityIdVal = str(request.args[list(request.args.keys())[0]])
+
+    # Extract object attribute from entityObj for the entityIdKey
+    attr = getattr(entityObj,entityIdKey)
+    session = getSesssion()
+    # Pass object attribute as entityIdKey and entityIdVal into query
+    query = entityObj.query.filter(attr==entityIdVal).update({'clientContactFirstName': 'Chuck'})
+    # IT"S WORKING WITH THE ABOVE 
+    
+    # query.setData("clientContactFirstName","Chuck")
+    # itemKey = "clientContactFirstName"
+    # attr = getattr(query,itemKey)
+    # print(attr)
+    # session = getSesssion()
+
+    # session.query(FoobarModel).filter(FoobarModel.id == foobar_id).update({'name': 'New Foobar Name!'})
+
+    # query.attr = "Chuck"
+    
+    # for item in request.json:
+    #     itemKey = item
+    #     print(type(itemKey))
+    #     itemVal = request.json[item]
+    #     print("Item key/val",itemKey,itemVal)
+        
+    #     attr = getattr(query,itemKey)
+    #     print(attr)
+
+    #     # Need to interpret itemKey literally to change the attribute 
+    #     # attr = itemVal
+
+    #     # query.clientContactFirstName = "Chuck"
+    #     attr = "Chuck"
+    #     session.commit()
+
+
+
+    session.commit()
+    print(query)
+
+###########
+# admin = User.query.filter_by(username='admin').first()
+# admin.email = 'my_new_email@example.com'
+# db.session.commit()
+
+# user = User.query.get(5)
+# user.name = 'New Name'
+# db.session.commit()
+# ############
+
+    # # Set relevant entity columns 
+    # cols = entityObj.__table__.columns.keys()
+
+    # # Extract attributes passed in URL to set filter cols 
+    # updateCols = [col for col in request.json.keys() if col in cols]
+
+    # updateVals = [request.args[key] for key in updateCols]
+
+    # print(updateCols)
+    # print(updateVals)
+
+    # print(query)
+    return "blah"
+    
 
 # ------- delete -------
 @app.route('/api/<entity>/delete',methods=["DELETE"])
