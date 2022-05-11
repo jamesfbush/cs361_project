@@ -266,7 +266,7 @@ def apiCreate(entity):
     # add and commit the change, return a success code 
     session.add(newEntity)
     session.commit()
-    return (f"{entity} created",201)
+    return (jsonify({entity:[request.json]}),201)
 
 # ------- retrieve -------
 
@@ -333,64 +333,14 @@ def apiUpdate(entity):
     # Extract object attribute from entityObj for the entityIdKey
     attr = getattr(entityObj,entityIdKey)
     session = getSesssion()
-    # Pass object attribute as entityIdKey and entityIdVal into query
-    query = entityObj.query.filter(attr==entityIdVal).update({'clientContactFirstName': 'Chuck'})
-    # IT"S WORKING WITH THE ABOVE 
-    
-    # query.setData("clientContactFirstName","Chuck")
-    # itemKey = "clientContactFirstName"
-    # attr = getattr(query,itemKey)
-    # print(attr)
-    # session = getSesssion()
-
-    # session.query(FoobarModel).filter(FoobarModel.id == foobar_id).update({'name': 'New Foobar Name!'})
-
-    # query.attr = "Chuck"
-    
-    # for item in request.json:
-    #     itemKey = item
-    #     print(type(itemKey))
-    #     itemVal = request.json[item]
-    #     print("Item key/val",itemKey,itemVal)
-        
-    #     attr = getattr(query,itemKey)
-    #     print(attr)
-
-    #     # Need to interpret itemKey literally to change the attribute 
-    #     # attr = itemVal
-
-    #     # query.clientContactFirstName = "Chuck"
-    #     attr = "Chuck"
-    #     session.commit()
-
-
-
+    # Pass request.json form directly to query/update
+    entityObj.query.filter(attr==entityIdVal).update(request.json)
+    # Look up updated record to return in response 
+    query = entityObj.query.filter(attr==entityIdVal).first().getData()
+    # Commit change 
     session.commit()
-    print(query)
 
-###########
-# admin = User.query.filter_by(username='admin').first()
-# admin.email = 'my_new_email@example.com'
-# db.session.commit()
-
-# user = User.query.get(5)
-# user.name = 'New Name'
-# db.session.commit()
-# ############
-
-    # # Set relevant entity columns 
-    # cols = entityObj.__table__.columns.keys()
-
-    # # Extract attributes passed in URL to set filter cols 
-    # updateCols = [col for col in request.json.keys() if col in cols]
-
-    # updateVals = [request.args[key] for key in updateCols]
-
-    # print(updateCols)
-    # print(updateVals)
-
-    # print(query)
-    return "blah"
+    return (jsonify(query),200)
     
 
 # ------- delete -------
