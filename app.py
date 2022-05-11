@@ -4,7 +4,7 @@ from dotenv import load_dotenv, find_dotenv
 import os 
 from datetime import datetime as dt
 from models import Clients, Projects, Employees, Tasks, prepopulateDatabase, getSesssion
-
+import requests 
 
 # Flask object
 app = Flask(__name__)
@@ -44,8 +44,8 @@ def clients():
 
 @app.route('/clients/retrieve',methods=["GET"])
 def clientsRetrieve():
-    results = retrieve(Clients, "all")
-    # results = Clients.query.all()
+    # results = retrieve(Clients, "all")
+    results = Clients.query.all()
     columns = Clients.__table__.columns.keys() # https://stackoverflow.com/questions/6455560/how-to-get-column-names-from-sqlalchemy-result-declarative-syntax
 
     return render_template("retrieve.j2", entity="Clients", data=[columns, results]) #data=[columns, results] 
@@ -53,13 +53,13 @@ def clientsRetrieve():
 @app.route('/clients/create',methods=["GET", "POST"])
 def clientsCreate():
     if request.method == "GET":
-        # results = Clients.query.all()
+        results = Clients.query.all()
         columns = Clients.__table__.columns.keys() # https://stackoverflow.com/questions/6455560/how-to-get-column-names-from-sqlalchemy-result-declarative-syntax
 
         return render_template("create.j2", entity="Clients", data=[]) #data=[columns, results] 
 
     if request.method == "POST":
-        formData = list(request.json.values())
+        formData = list(request.form.values())
 
         #https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
  
@@ -97,7 +97,7 @@ def projectsCreate():
         return render_template("create.j2", entity="Projects", data=[]) #data=[columns, results] 
 
     if request.method == "POST":
-        formData = list(request.json.values())
+        formData = list(request.form.values())
 
         #https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
  
@@ -134,7 +134,7 @@ def employeesCreate():
         return render_template("create.j2", entity="Employees", data=[]) #data=[columns, results] 
 
     if request.method == "POST":
-        formData = list(request.json.values())
+        formData = list(request.form.values())
 
         #https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
  
@@ -173,14 +173,16 @@ def tasksCreate():
         return render_template("create.j2", entity="Tasks", data=[]) #data=[columns, results] 
 
     if request.method == "POST":
-        formData = list(request.json.values())
+        formData = list(request.form.values())
+        print(formData)
 
         #https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
  
         task = Tasks(projectId=formData[0], 
                 taskDescription=formData[1], 
-                taskTime=formData[2],
-                eeId=formData[3]
+                taskDate=str(formData[2]),
+                taskTime=formData[3],
+                eeId=formData[4]
             )
         db.session.add(task)
         db.session.commit()
@@ -252,6 +254,7 @@ def apiCreate(entity):
     elif entity == "tasks":
         newEntity = entityObj(  projectId=request.json['projectId'],
                                 taskDescription=request.json['taskDescription'],
+                                taskDate=request.json['taskDate'],
                                 taskTime=request.json['taskTime'],
                                 eeId=request.json['eeId'] 
                             )
@@ -304,6 +307,7 @@ def apiRetrieve(entity, internal=None):
                 # Numeric values require exact match
                 if val.isnumeric():
                     query = entityObj.query.filter(attr==val).all()
+                    print("**",query)
                 # Non-numeric values allow like match
                 elif val.isnumeric() is False:
                     query = entityObj.query.filter(attr.like(f'%{val}%')).all()
@@ -314,6 +318,7 @@ def apiRetrieve(entity, internal=None):
             # No results, return 204 Not Found 
             if len(results[entity]) == 0:
                 return (jsonify(results),204)
+                
             # Results found, return 200
             return (jsonify(results),200)
 
@@ -374,7 +379,7 @@ def appHelp():
             return render_template("help.j2", entity="Help")
 
 
-# ---------- Help ---------- 
+# ---------- FAQ ---------- 
 @app.route('/faq',methods=["GET"])
 def appFaq():
     if request.method == "GET": 
@@ -387,11 +392,52 @@ def confirmation():
     if request.method == "GET": 
             return render_template("confirmation.j2")
 
+# ---------- Reports ---------- 
+@app.route('/reports/<entity>',methods=["GET"])
+def reports(entity):
+    if request.method == "GET" and len(request.args) == 0:
+        return "render get report page "
+    elif request.method == "GET" and len(request.args) == 1: 
+        # consider adding granularity 
+        # supports:  
+        #   tasks by project: 'http://localhost:5000/reports/tasks?projectId=1'
 
+        # pull out the intersecting entity id (e.g., tasks by projectId, tasks by eeId) 
+        idKey = str(list(request.args)[0])
+        # query db by the idKey and value to obtain data in json 
+        data = requests.get(f'http://localhost:5000/api/{entity}/retrieve?{idKey}={request.args[idKey]}').json()
+        
+        # now for tasks, we are breaking out x-axis as taskDates and y-axis as taskTimes
+        taskDates = {task['taskDate'] for task in data['tasks']}
+        taskTimes = {task['taskTime'] for task in data['tasks']}
+
+
+        graphingPayload = { "graph_type": "line",
+                            "graph_height": 400, 
+                            "graph_width": 600, 
+                            "x_axis": str(list(taskDates)), 
+                            "y_axis": str(list(taskTimes)),
+                            "export_type": "jpeg",
+                            "export_location": "export.jpeg",
+                            "graph_title": "report",
+                            "x_axis_label": "Date",
+                            "y_axis_label": "Amount"
+                            }
+
+        # payload = json.loads(graphingPayload)
+    return jsonify(graphingPayload)
+
+# ---------- Reports ---------- 
+@app.route('/reports/client',methods=["GET"])
+def reportsClient():
+    r = requests.get('http://localhost:5000/api/tasks/retrieve?projectId=1')
+    print(r.text)
+    return r.text
 
 
 
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='localhost.',port=port, debug=True)
+    host = 'localhost.'
+    app.run(host=host,port=port, debug=True)

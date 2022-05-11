@@ -112,6 +112,7 @@ class Tasks(db.Model):
     taskId = db.Column(db.Integer, primary_key=True, nullable=False, unique=True) #Auto increment? 
     projectId = db.Column(db.Integer, db.ForeignKey(Projects.projectId), nullable=False) # https://stackoverflow.com/questions/18807322/sqlalchemy-foreign-key-relationship-attributes
     taskDescription = db.Column(db.String(240), nullable=False)
+    taskDate = db.Column(db.String(10), nullable=False)# new
     taskTime = db.Column(db.Numeric(4,2), nullable=False)
     eeId = db.Column(db.Integer, db.ForeignKey(Employees.eeId), nullable=False)
     # Returns information about object when called 
@@ -125,6 +126,7 @@ class Tasks(db.Model):
         return dict({'taskId':self.taskId,
                 'projectId':self.projectId,
                 'taskDescription':self.taskDescription,
+                'taskDate':self.taskDate,
                 'taskTime':float(self.taskTime),
                 'eeId':self.eeId
                 })
@@ -163,9 +165,6 @@ def prepopulateDatabase():
     # print("Creating test Projects table.\n")
     ProjectsLst = [ (1, 'Monthly garden maintenence at Adams house.', 55.99),
                     (2, 'Periodic tree trimming at Ghosh house.', 69.99), 
-                    (3, 'Cut the grass every two weeks',39.99),
-                    (4, 'Tune double bass',139.99),
-                    (5, 'Disposal of large bagged object', 100.99)
                 ]
 
    
@@ -206,8 +205,13 @@ def prepopulateDatabase():
     #     print(i)
 
     # -------------------------- Populate Tasks table
-    TasksLst = [    (1, 'Pulled weeds all damn day', 3.4, 1),
-                    (2, 'Trimmed 57 trees.', 2.5, 2)
+    # projectId, taskDescription, taskDate, taskTime, eeId
+    TasksLst = [    (1, 'Pulled weeds all damn day', '2020-01-02',3.4, 1),
+                    (1, 'Finished pulling weeds; pruned begonias', '2020-01-03',2.4, 1),
+                    (1, 'Mulched front flower beds', '2020-01-04',2.1, 1),
+                    (1, 'Transplanted very thorny rose bush', '2020-01-05',4.4, 1),
+                    (1, 'Pulled more weeds all damn day', '2020-01-02',3.4, 1),
+                    (2, 'Trimmed 57 trees.', '2020-01-05',2.5, 2)
                     ]
 
    
@@ -216,8 +220,9 @@ def prepopulateDatabase():
     for i in TasksLst: 
         task = Tasks(   projectId= i[0], 
                         taskDescription= i[1], 
-                        taskTime= i[2], 
-                        eeId = i[3] 
+                        taskDate=i[2],
+                        taskTime= i[3], 
+                        eeId = i[4] 
                     )
 
 

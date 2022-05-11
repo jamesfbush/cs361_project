@@ -37,7 +37,8 @@ DELETE http://localhost:5000/api/tasks/delete?taskId=1
 ### Retrieve all Tasks
 GET http://localhost:5000/api/tasks/retrieve?retrieveAll
 
-
+### Retrieve all tasks by projectId 
+GET http://localhost:5000/api/tasks/retrieve?projectId=2
 
 ### Create - new Client
 POST http://localhost:5000/api/clients/create HTTP/1.1
@@ -73,6 +74,7 @@ content-type: application/json
 {
     "projectId":2,
     "taskDescription":"jumping",
+    "taskDate":"2020-01-03",
     "taskTime":2.3,
     "eeId":2
 }
@@ -100,7 +102,7 @@ PUT http://localhost:5000/api/clients/update?clientId=4 HTTP/1.1
 content-type: application/json
 
 {
-    "clientContactFirstName": "Chuck",
+    "clientContactFirstName":"Chuck",
     "clientContactLastName":"Taylor"
 
 }
@@ -110,3 +112,57 @@ GET http://localhost:5000/api/clients/retrieve?clientContactFirstName=Charles
 
 ### Check update
 GET http://localhost:5000/api/clients/retrieve?clientContactFirstName=Chuck
+
+
+
+# Create a bunch of tasks for project 2
+###
+POST http://localhost:5000/api/tasks/create HTTP/1.1
+content-type: application/json
+
+{
+    "projectId":2,
+    "taskDescription":"Jumping up and down",
+    "taskTime":0.3,
+    "eeId":2
+}
+###
+POST http://localhost:5000/api/tasks/create HTTP/1.1
+content-type: application/json
+
+{
+    "projectId":2,
+    "taskDescription":"Flapping arms all around",
+    "taskTime":2.3,
+    "eeId":2
+}
+###
+POST http://localhost:5000/api/tasks/create HTTP/1.1
+content-type: application/json
+
+{
+    "projectId":2,
+    "taskDescription":"Hopping to and fro",
+    "taskTime":2.3,
+    "eeId":2
+}
+###
+POST http://localhost:5000/api/tasks/create HTTP/1.1
+content-type: application/json
+
+{
+    "projectId":2,
+    "taskDescription":"Humming here we go",
+    "taskTime":1.0,
+    "eeId":2
+}
+###
+POST http://localhost:5000/api/tasks/create HTTP/1.1
+content-type: application/json
+
+{
+    "projectId":2,
+    "taskDescription":"Rolling in the grass",
+    "taskTime":4.6,
+    "eeId":2
+}

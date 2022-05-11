@@ -75,6 +75,9 @@
             <label for="taskDescription">Task description</label><br><br>
                 <input type="text" name="taskDescription"><br><br>
 
+            <label for="taskDate">Task date</label><br><br>
+                <input type="date" name="taskDate"><br><br>
+
             <label for="taskTime">Task time</label><br><br>
                 <input type="number" name="taskTime"><br><br>
 
@@ -87,6 +90,7 @@
     </div>
     
     {# success/create conditional #}
+    <p>Good job</p>
     {% endif %}
 
 {% endblock %}
