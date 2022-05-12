@@ -1,0 +1,42 @@
+{% extends "main.j2" %}
+{% block title %}Index{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+        .important { color: #336699; }
+    </style>
+{% endblock %}
+{% block content %}
+    <h1>Reports</h1>
+    <p>
+      Choose the type of report you would like to prepare below.
+    </p>
+
+    {# Show choices for report #}
+    {% if entity is none %}
+
+    {# Task time by project #} 
+    <div class="optionsContainer">
+        <h2>Total task time by project</h2>
+            <p> Enter the project ID number and submit to obtain report.</p>
+            <form action="/reports" method="GET">
+                <input type="hidden" value="tasks" name="entity">
+
+                <label for="projectId">Project ID:</label><br><br>
+                    <input type="number" name="projectId"><br><br>
+                <input type="submit" value="Submit">
+            </form>
+        </div>
+
+
+    {# Show report #}
+    {% elif entity is not none %}
+    {% for i in data %}
+    <p> {{ i }} </p>
+    {% endfor %}
+    {{ img }}
+    {% endif %}
+    {% for i in clients%}
+        <p>{{ i }}</p>
+    {% endfor %}
+{% endblock %}

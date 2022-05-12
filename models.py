@@ -207,10 +207,11 @@ def prepopulateDatabase():
     # -------------------------- Populate Tasks table
     # projectId, taskDescription, taskDate, taskTime, eeId
     TasksLst = [    (1, 'Pulled weeds all damn day', '2020-01-02',3.4, 1),
-                    (1, 'Finished pulling weeds; pruned begonias', '2020-01-03',2.4, 1),
+                    (1, 'Finished pulling weeds', '2020-01-03',2.4, 1),
+                    (1, 'Pruned begonias', '2020-01-08',2.1, 1),
                     (1, 'Mulched front flower beds', '2020-01-04',2.1, 1),
                     (1, 'Transplanted very thorny rose bush', '2020-01-05',4.4, 1),
-                    (1, 'Pulled more weeds all damn day', '2020-01-02',3.4, 1),
+                    (1, 'Pulled more weeds all damn day', '2020-01-20',15.2, 1),
                     (2, 'Trimmed 57 trees.', '2020-01-05',2.5, 2)
                     ]
 

@@ -37,7 +37,7 @@ DELETE http://localhost:5000/api/tasks/delete?taskId=1
 ### Retrieve all Tasks
 GET http://localhost:5000/api/tasks/retrieve?retrieveAll
 
-### Retrieve all tasks by projectId 
+### Retrieve all tasks by projectId taskId
 GET http://localhost:5000/api/tasks/retrieve?projectId=2
 
 ### Create - new Client

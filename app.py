@@ -6,6 +6,11 @@ from datetime import datetime as dt
 from models import Clients, Projects, Employees, Tasks, prepopulateDatabase, getSesssion
 import requests 
 
+import numpy as np
+import matplotlib.pyplot as plt 
+import io
+import base64
+
 # Flask object
 app = Flask(__name__)
 # # https://flask.palletsprojects.com/en/2.1.x/tutorial/layout/ 
@@ -392,56 +397,90 @@ def confirmation():
     if request.method == "GET": 
             return render_template("confirmation.j2")
 
-# ---------- Reports ---------- 
-@app.route('/reports/<entity>',methods=["GET"])
-def reports(entity):
+# ---------- Reports ---------- s
 
-    # TODO 
-    # It supports tasks by project Id
-    # It is a bit convoluted with the routes/landing page/entity reports
-    # , etc. 
-    # consider taking <entity> out of the URL and making it a keyword argument 
-    # then changing logic below to do: 
-    # /reports - landing page with all available reports
-    # /reports?entity=tasks&projectId=2 - task time by project 
-    
+def serve_img(plt):
+    """
+    Take image plot (matplotlib currently), return HTML img element with in-memory image
+
+    Keyword arguments:
+    plt -- the graph object
+
+    Sourced from: 
+    https://blog.furas.pl/python-flask-how-to-use-bytesio-in-flask-to-display-matplotlib-image-without-saving-in-file-gb.html
+    """
+    img = io.BytesIO()
+    plt.savefig(img, format="png")
+    img.seek(0)
+    plot_url = base64.b64encode(img.getvalue()).decode()
+    return f'<img src="data:image/png;base64,{plot_url}">'
 
 
+@app.route('/reports',methods=["GET"])
+def reports():
 
-
+    # Landing page
     if request.method == "GET" and len(request.args) == 0:
-        tables = db.engine.table_names()
-        return render_template("reports.j2", entity=entity, data=tables)
+        #tables = db.engine.table_names()
+        print("THIS")
+        return render_template("reports.j2", entity=None)
 
-    elif request.method == "GET" and len(request.args) == 1: 
+    # Specific reports
+    # Request format: http://localhost:5000/reports?entity=tasks&projectId=2
+    elif request.method == "GET" and len(request.args) >= 1: 
+
+        # Extract entity from URL          
+        entity = request.args[str(list(request.args)[0])]
+
+        # intersecting entity ID, e.g., reporting tasks by project, projectId is intersecting
+        idKey = str(list(request.args)[1])
+        idVal = str(request.args[idKey])
+        
+        # query db by the intersectId and value to obtain data in json 
+        data = requests.get(f'http://localhost:5000/api/{entity}/retrieve?{idKey}={idVal}').json()[entity]
+        
+        # convert dict to list of dates and times sorted by date
+        taskDatesTimes = sorted({task['taskDate']:task['taskTime'] for task in data}.items(), key=lambda item:item[0])
+        print(taskDatesTimes)
+
+        # declare x and y arrays, prepare graph  
+        x = np.array([i[0] for i in taskDatesTimes])
+        y = np.array([i[1] for i in taskDatesTimes])
+        plt.bar(x, y, color="blue")
+        plt.xlabel("Date")
+        plt.ylabel("Hours")
+        # plt.savefig("static/plot.jpeg")
+
+        img = serve_img(plt)
+
+
+        # graphingPayload = { "graph_type": "line",
+        #                     "graph_height": 400, 
+        #                     "graph_width": 600, 
+        #                     "x_axis": str(list(taskDates)), 
+        #                     "y_axis": str(list(taskTimes)),
+        #                     "export_type": "jpeg",
+        #                     "export_location": "export.jpeg",
+        #                     "graph_title": "report",
+        #                     "x_axis_label": "Date",
+        #                     "y_axis_label": "Amount"
+        #                     }
+
+        # payload = json.loads(graphingPayload)
+        return render_template("reports.j2", entity=entity, idKey=idKey, data=data, img=serve_img(plt)) #data=[taskDates,taskTimes]
+
+    # Reports Notes
         # consider adding granularity 
         # supports:  
         #   tasks by project: 'http://localhost:5000/reports/tasks?projectId=1'
 
+        # demo'd proof of concept with plotly and dropping jpegs
+        # into static directory. 
+
+        # as opposed to creating JPEG each time, can do one in memory
+        # and server per https://stackoverflow.com/questions/25140826/generate-image-embed-in-flask-with-a-data-uri 
+        # another example: https://stackoverflow.com/questions/7877282/how-to-send-image-generated-by-pil-to-browser 
         # pull out the intersecting entity id (e.g., tasks by projectId, tasks by eeId) 
-        idKey = str(list(request.args)[0])
-        # query db by the idKey and value to obtain data in json 
-        data = requests.get(f'http://localhost:5000/api/{entity}/retrieve?{idKey}={request.args[idKey]}').json()
-        
-        # now for tasks, we are breaking out x-axis as taskDates and y-axis as taskTimes
-        taskDates = {task['taskDate'] for task in data['tasks']}
-        taskTimes = {task['taskTime'] for task in data['tasks']}
-
-
-        graphingPayload = { "graph_type": "line",
-                            "graph_height": 400, 
-                            "graph_width": 600, 
-                            "x_axis": str(list(taskDates)), 
-                            "y_axis": str(list(taskTimes)),
-                            "export_type": "jpeg",
-                            "export_location": "export.jpeg",
-                            "graph_title": "report",
-                            "x_axis_label": "Date",
-                            "y_axis_label": "Amount"
-                            }
-
-        # payload = json.loads(graphingPayload)
-    return jsonify(graphingPayload)
 
 # ---------- Reports ---------- 
 @app.route('/reports/client',methods=["GET"])
