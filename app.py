@@ -395,8 +395,24 @@ def confirmation():
 # ---------- Reports ---------- 
 @app.route('/reports/<entity>',methods=["GET"])
 def reports(entity):
+
+    # TODO 
+    # It supports tasks by project Id
+    # It is a bit convoluted with the routes/landing page/entity reports
+    # , etc. 
+    # consider taking <entity> out of the URL and making it a keyword argument 
+    # then changing logic below to do: 
+    # /reports - landing page with all available reports
+    # /reports?entity=tasks&projectId=2 - task time by project 
+    
+
+
+
+
     if request.method == "GET" and len(request.args) == 0:
-        return "render get report page "
+        tables = db.engine.table_names()
+        return render_template("reports.j2", entity=entity, data=tables)
+
     elif request.method == "GET" and len(request.args) == 1: 
         # consider adding granularity 
         # supports:  
