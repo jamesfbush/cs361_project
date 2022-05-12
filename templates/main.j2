@@ -37,6 +37,12 @@
                 {% else %}
                     <li><a href="/tasks">Tasks</a></li>
                 {% endif %}
+                {# BUG: hilighting not working #}
+                {% if entity == "Reports" %}
+                    <li class="active"><a href="/reports">Reports</a></li>
+                {% else %}
+                    <li><a href="/reports">Reports</a></li>
+                {% endif %}
                 {% if entity == "Help" %}
                     <li class="active"><a href="/help">Help</a></li>
                 {% else %}
@@ -87,6 +93,16 @@
                     <h3>Tasks</h3>
                             <p>Click below to view tasks, or edit an existing task.</p> 
                             <a href="/tasks">Tasks</a>
+                    </div>
+                    <div>
+                    {# https://icons.getbootstrap.com/icons/clipboard-check/ #}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="#FF6201" class="bi bi-file-earmark-bar-graph" viewBox="0 0 16 16">
+                        <path d="M10 13.5a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-6a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v6zm-2.5.5a.5.5 0 0 1-.5-.5v-4a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-1zm-3 0a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-1z"/>
+                        <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                    </svg>
+                    <h3>Reports</h3>
+                            <p>Click below to generate reports for time tracking by project, client, or employee.</p> 
+                            <a href="/reports">Reports</a>
                     </div>
                 </div> 
         </div>

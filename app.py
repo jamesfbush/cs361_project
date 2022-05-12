@@ -423,21 +423,21 @@ def reports():
     if request.method == "GET" and len(request.args) == 0:
         #tables = db.engine.table_names()
         print("THIS")
-        return render_template("reports.j2", entity=None)
+        return render_template("reports.j2", entity="reports", reportEntity=None)
 
     # Specific reports
     # Request format: http://localhost:5000/reports?entity=tasks&projectId=2
     elif request.method == "GET" and len(request.args) >= 1: 
 
         # Extract entity from URL          
-        entity = request.args[str(list(request.args)[0])]
+        reportEntity = request.args[str(list(request.args)[0])]
 
         # intersecting entity ID, e.g., reporting tasks by project, projectId is intersecting
         idKey = str(list(request.args)[1])
         idVal = str(request.args[idKey])
         
         # query db by the intersectId and value to obtain data in json 
-        data = requests.get(f'http://localhost:5000/api/{entity}/retrieve?{idKey}={idVal}').json()[entity]
+        data = requests.get(f'http://localhost:5000/api/{reportEntity}/retrieve?{idKey}={idVal}').json()[reportEntity]
         
         # convert dict to list of dates and times sorted by date
         taskDatesTimes = sorted({task['taskDate']:task['taskTime'] for task in data}.items(), key=lambda item:item[0])
@@ -446,7 +446,7 @@ def reports():
         # declare x and y arrays, prepare graph  
         x = np.array([i[0] for i in taskDatesTimes])
         y = np.array([i[1] for i in taskDatesTimes])
-        plt.bar(x, y, color="blue")
+        plt.bar(x, y, color="#FCB35F")
         plt.xlabel("Date")
         plt.ylabel("Hours")
         # plt.savefig("static/plot.jpeg")
@@ -467,7 +467,7 @@ def reports():
         #                     }
 
         # payload = json.loads(graphingPayload)
-        return render_template("reports.j2", entity=entity, idKey=idKey, data=data, img=serve_img(plt)) #data=[taskDates,taskTimes]
+        return render_template("reports.j2", idKey=idKey, data=data, img=serve_img(plt), entity="reports", reportEntity="tasks") #data=[taskDates,taskTimes]
 
     # Reports Notes
         # consider adding granularity 

@@ -13,14 +13,14 @@
     </p>
 
     {# Show choices for report #}
-    {% if entity is none %}
+    {% if reportEntity is none %}
 
     {# Task time by project #} 
     <div class="optionsContainer">
         <h2>Total task time by project</h2>
             <p> Enter the project ID number and submit to obtain report.</p>
             <form action="/reports" method="GET">
-                <input type="hidden" value="tasks" name="entity">
+                <input type="hidden" value="tasks" name="reportEntity">
 
                 <label for="projectId">Project ID:</label><br><br>
                     <input type="number" name="projectId"><br><br>
@@ -30,7 +30,7 @@
 
 
     {# Show report #}
-    {% elif entity is not none %}
+    {% elif reportEntity is not none %}
     {% for i in data %}
     <p> {{ i }} </p>
     {% endfor %}
