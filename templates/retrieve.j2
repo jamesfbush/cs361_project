@@ -9,12 +9,32 @@
 {% block content %}
     <h1>Retrieve {{ entity }}</h1>
 
+
     {# landing page #}
     {% if data | length == 1 %}
     <p>Choose "retrieve all" or search by parameters below.</p>
-    <a href="/{{ entity }}/retrieve?retrieveAll=true">Retrieve all</a>
+    <div class="form-container">
+        <div class="form-group">
+            <form action="/{{entity}}/retrieve" method="GET">
 
-    {% endif %}
+                    {% for i in data[0] %}
+                    <div class="form-row">
+                   
+                        <label for "{{i}}>{{i}}</label>
+                        <br>
+                        <input type="text" name="{{i}}">
+                    </div>
+                    {% endfor %}
+                    <div class="form-row">
+                        <input type="submit" class="submit-button" value="Submit">
+
+                    </div>
+            </form> 
+        </div>
+    </div>
+    
+
+    {% elif data[1]|length > 0 %}
 
     <p><strong>Search results:</strong></p>
     <div class="resultsContainer">
@@ -38,5 +58,12 @@
             </tbody>
         </table>
     </div>
+
+    {# no results #}
+    {% elif data[1] | length == 0 %}
+    <p>No results</p>
+    <a href=/{{entity}}/retrieve>Go back to search.</a>
+
+    {% endif %}
 
 {% endblock %}

@@ -37,16 +37,7 @@ host = 'localhost'
 port = 5000
 
 
-
-
-# ---------- Home ---------- 
-@app.route('/',methods=["GET"])
-def home():
-    if request.method == "GET": 
-            return render_template("main.j2",entity="Home") 
-
-
-# ---------- Generic Functions ----------
+# ---------- Helpers ----------
 def mapEntity(entity):
     # map passed entity to db object 
     entityDict = {  'tasks':Tasks, 
@@ -57,35 +48,98 @@ def mapEntity(entity):
     return entityDict[entity]
 
 
+# ---------- UI - Main ---------- 
+@app.route('/',methods=["GET"])
+def home():
+    if request.method == "GET": 
+            return render_template("main.j2",entity="Home") 
 
-# ---------- Entity Landing ---------- 
+
+# ---------- UI - Entity landing ---------- 
 @app.route('/<entity>',methods=["GET"])
 def uiEntityLanding(entity):
     return render_template("main.j2", entity=entity.title())
 
-# ----------- Retrieve ----------
-# @app.route('/<entity>/retrieve',methods=["GET"])
-# def uiRetrieve(entity):
 
-#     entityObj = mapEntity(entity)
-#     entityStr = entity
-#     columns = entityObj.__table__.columns.keys()   #https://stackoverflow.com/questions/6455560/how-to-get-column-names-from-sqlalchemy-result-declarative-syntax
+# ----------- UI/API - Retrieve ----------
+@app.route('/api/<entity>/retrieve',methods=["GET"])
+@app.route('/<entity>/retrieve',methods=["GET"])
+def retrieve(entity):
 
-#     # Landing page 
-#     if len(request.args) == 0:  
-#         return render_template("retrieve.j2", entity=entityStr, data=[columns])
+    # map passed entity to db object 
+    entityObj = mapEntity(entity) 
+    entityStr = entity
+    columns = entityObj.__table__.columns.keys()
 
-#     # Retrieve all 
-#     elif "retrieveAll" in request.args and len(request.args) > 0:
-#         results = entityObj.query.all()
-#         return render_template("retrieve.j2", entity=entityStr, data=[columns, results])
+    # UI - Landing page 
+    if len(request.args) == 0 and "/api/" not in str(request.url_rule):  
+        return (render_template("retrieve.j2", entity=entityStr, data=[columns]),200)
 
-#     # Retrieve based on parameters 
-#     elif "retrieveAll" not in request.args and len(request.args) > 0:
+    # UI / API - URL request to retrieveAll 
+    elif 'retrieveAll' in request.args.keys() and len(request.args.keys()) == 1:
+        query = entityObj.query.all()
 
-#         pass
+        # API
+        if "/api/" in str(request.url_rule):
+            results = {entity:[i.getData() for i in query]}
+            return (jsonify(results),200)
+        # UI
+        else: 
+            results = query 
+            return (render_template("retrieve.j2", entity=entityStr, data=[columns, results]),200)
+
+    # Retrieve based on URL-specified filter 
+    elif "retrieveAll" not in request.args and len(request.args.keys()) >= 1:
+
+        # Extract attributes passed in URL to set filter columns 
+        filters = [col for col in request.args.keys() if col in columns and request.args[col] != ""]
+        print("FILTERS",filters)
+        if len(filters) > 0:
+            # Declare results - a bit different than above
+            results = {entity:[]}
+            
+            # Query db based on attributes/values in URL
+            for i in filters:
+                # Attribute passed in URL 
+                attr = getattr(entityObj,i) 
+                #  Value passed in URL 
+                val = request.args[i] 
+                # Numeric values require exact match
+                if val.isnumeric():
+                    query = entityObj.query.filter(attr==val).all()
+                # Non-numeric values allow like match
+                elif val.isnumeric() is False:
+                    query = entityObj.query.filter(attr.like(f'%{val}%')).all()
+                # Add each unique query result to results dict
+                for result in query:
+                    if result not in results[entity] and i is not None:
+                        results[entity].append(result.getData())
+
+            # No results, return 204 Not Found 
+            if len(results[entity]) == 0:
+                # API
+                if "/api/" in str(request.url_rule):
+                    return (jsonify(results),204)
+                # UI
+                else: 
+                    results = results[entity]
+                    # print("HEYo",len(results))
+                    return (render_template("retrieve.j2", entity=entityStr, data=results)) # Had to remove 204
+                    
+            # API - results found, return 200 Found
+            if "/api/" in str(request.url_rule):
+                return (jsonify(results),200)
+            # UI 
+            else:
+                results = results[entity]
+                return (render_template("retrieve.j2", entity=entityStr, data=[columns, results]),200)
+
+        # Else, for UI/API return 404 error 
+        return ("ERROR: malformed request",404)
 
 
+
+# ---Clients Create ------ 
 @app.route('/clients/create',methods=["GET", "POST"])
 def clientsCreate():
     if request.method == "GET":
@@ -116,12 +170,6 @@ def projects():
     if request.method == "GET": 
             return render_template("main.j2",entity="Projects")
 
-# @app.route('/projects/retrieve',methods=["GET"])
-# def projectsRetrieve():
-#     results = Projects.query.all()
-#     columns = Projects.__table__.columns.keys() 
-#     print(columns)
-#     return render_template("retrieve.j2", entity="Projects", data=[columns, results]) #data=[columns, results] 
 
 @app.route('/projects/create',methods=["GET", "POST"])
 def projectsCreate():
@@ -153,12 +201,6 @@ def employees():
     if request.method == "GET": 
             return render_template("main.j2", entity="Employees")
 
-# @app.route('/employees/retrieve',methods=["GET"])
-# def employeesRetrieve():
-#     results = Employees.query.all()
-#     columns = Employees.__table__.columns.keys() 
-#     print(columns)
-#     return render_template("retrieve.j2", entity="Employees", data=[columns, results]) #data=[columns, results] 
 
 @app.route('/employees/create',methods=["GET", "POST"])
 def employeesCreate():
@@ -191,12 +233,6 @@ def tasks():
     if request.method == "GET": 
             return render_template("main.j2", entity="Tasks")
 
-# @app.route('/tasks/retrieve',methods=["GET"])
-# def tasksRetrieve():
-#     results = Tasks.query.all()
-#     columns = Tasks.__table__.columns.keys() 
-#     print(columns)
-#     return render_template("retrieve.j2", entity="Tasks", data=[columns, results]) #data=[columns, results] 
 
 
 @app.route('/tasks/create',methods=["GET", "POST"])
@@ -227,32 +263,7 @@ def tasksCreate():
 
 
 
-# ------- timeDelta -------
-@app.route('/api/timeDelta',methods=["GET"])
-def timeDeltaAPI():
 
-    if request.method == "GET": 
-        if len(request.args) > 0:
-            # Extract startTime and endTime from API call  
-            startTime = dt.fromtimestamp(int(request.args['startTime']))
-            endTime = dt.fromtimestamp(int(request.args['endTime'] ))
-
-            # Calculate the timeDelta down to total seconds 
-            totalSeconds = int((endTime - startTime).total_seconds()) 
-
-            # Calculate days, hours, minutes, seconds for dict
-            timeDelta = {"timeDelta": { "days": totalSeconds // (60*60*24),
-                                        "hours": (totalSeconds - (totalSeconds // (60*60*24))*60*60*24) // (60*60),
-                                        "minutes": (totalSeconds % 3600) // 60,
-                                        "seconds": totalSeconds % 60
-                                    }
-                        }
-            # Return JSON 
-            return jsonify(timeDelta)
-        else:
-            return ("Call API in following format:<br><br>\
-                '.../api/timeDelta?startTime=1577865600&endTime=1641121445'<br><br>\
-                    where startTime and endTime values are Unix timestamps.",404)
 
 # ------- create -------
 @app.route('/api/<entity>/create',methods=["POST"])
@@ -297,81 +308,6 @@ def apiCreate(entity):
     session.commit()
     return (jsonify({entity:[request.json]}),201)
 
-# ------- retrieve -------
-
-@app.route('/api/<entity>/retrieve',methods=["GET"])
-@app.route('/<entity>/retrieve',methods=["GET"])
-def retrieve(entity):
-
-    # map passed entity to db object 
-    entityObj = mapEntity(entity) 
-    entityStr = entity
-    columns = entityObj.__table__.columns.keys()
-
-    # UI - Landing page 
-    if len(request.args) == 0 and "/api/" not in str(request.url_rule):  
-        return (render_template("retrieve.j2", entity=entityStr, data=[columns]),200)
-
-    # UI / API - URL request to retrieveAll 
-    elif 'retrieveAll' in request.args.keys() and len(request.args.keys()) == 1:
-        query = entityObj.query.all()
-
-        # API
-        if "/api/" in str(request.url_rule):
-            results = {entity:[i.getData() for i in query]}
-            return (jsonify(results),200)
-        # UI
-        else: 
-            results = query 
-            return (render_template("retrieve.j2", entity=entityStr, data=[columns, results]),200)
-
-    # Retrieve based on URL-specified filter 
-    elif "retrieveAll" not in request.args and len(request.args.keys()) >= 1:
-
-        # Extract attributes passed in URL to set filter columns 
-        filters = [col for col in request.args.keys() if col in columns]
-        if len(filters) > 0:
-            # Declare results - a bit different than above
-            results = {entity:[]}
-            
-            # Query db based on attributes/values in URL
-            for i in filters:
-                # Attribute passed in URL 
-                attr = getattr(entityObj,i) 
-                #  Value passed in URL 
-                val = request.args[i] 
-                # Numeric values require exact match
-                if val.isnumeric():
-                    query = entityObj.query.filter(attr==val).all()
-                    print("**",query)
-                # Non-numeric values allow like match
-                elif val.isnumeric() is False:
-                    query = entityObj.query.filter(attr.like(f'%{val}%')).all()
-                # Add each unique query result to results dict
-                for result in query:
-                    if result not in results[entity] and i is not None:
-                        results[entity].append(result.getData())
-
-            # No results, return 204 Not Found 
-            if len(results[entity]) == 0:
-                # API
-                if "/api/" in str(request.url_rule):
-                    return (jsonify(results),204)
-                # UI
-                else: 
-                    results = results[entity]
-                    return (render_template("retrieve.j2", entity=entityStr, data=[columns, results]),204)
-                
-            # API - results found, return 200 Found
-            if "/api/" in str(request.url_rule):
-                return (jsonify(results),200)
-            # UI 
-            else:
-                results = results[entity]
-                return (render_template("retrieve.j2", entity=entityStr, data=[columns, results]),200)
-
-        # Else, for UI/API return 404 error 
-        return ("ERROR: malformed request",404)
 
 
 # ------- update -------
@@ -420,21 +356,21 @@ def apiDelete(entity):
     return (jsonify("deleted"),200)
 
 
-# ---------- Help ---------- 
+# ---------- UI - Help ---------- 
 @app.route('/help',methods=["GET"])
 def appHelp():
     if request.method == "GET": 
             return render_template("help.j2", entity="Help")
 
 
-# ---------- FAQ ---------- 
+# ---------- UI - FAQ ---------- 
 @app.route('/faq',methods=["GET"])
 def appFaq():
     if request.method == "GET": 
             return render_template("faq.j2", entity="Help")
 
 
-# ---------- Confirmation ---------- 
+# ---------- UI - Confirmation ---------- 
 @app.route('/confirmation',methods=["GET"])
 def confirmation():
     if request.method == "GET": 
@@ -535,7 +471,32 @@ def reports():
         return render_template("reports.j2", idKey=idKey, data=data, img=img, entity="reports", reportEntity="tasks") #data=[taskDates,taskTimes]
 
 
- 
+# ------- API - timeDelta -------
+@app.route('/api/timeDelta',methods=["GET"])
+def timeDeltaAPI():
+
+    if request.method == "GET": 
+        if len(request.args) > 0:
+            # Extract startTime and endTime from API call  
+            startTime = dt.fromtimestamp(int(request.args['startTime']))
+            endTime = dt.fromtimestamp(int(request.args['endTime'] ))
+
+            # Calculate the timeDelta down to total seconds 
+            totalSeconds = int((endTime - startTime).total_seconds()) 
+
+            # Calculate days, hours, minutes, seconds for dict
+            timeDelta = {"timeDelta": { "days": totalSeconds // (60*60*24),
+                                        "hours": (totalSeconds - (totalSeconds // (60*60*24))*60*60*24) // (60*60),
+                                        "minutes": (totalSeconds % 3600) // 60,
+                                        "seconds": totalSeconds % 60
+                                    }
+                        }
+            # Return JSON 
+            return jsonify(timeDelta)
+        else:
+            return ("Call API in following format:<br><br>\
+                '.../api/timeDelta?startTime=1577865600&endTime=1641121445'<br><br>\
+                    where startTime and endTime values are Unix timestamps.",404)
 
 
 
