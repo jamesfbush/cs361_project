@@ -17,33 +17,33 @@
             <ul class="topNavbar">
                 {# navigation hilighting how-to below #}
                 {# https://www.w3schools.com/Css/tryit.asp?filename=trycss_navbar_horizontal_black_active #}
-                {% if entity == "Home" %}
+                {% if entity.title() == "Home" %}
                     <li class="active"><a href="/">Home</a></li>
                 {% else %}
                     <li><a href="/">Home</a></li>
                 {% endif %}
-                {% if entity == "Clients" %}
+                {% if entity.title() == "Clients" %}
                     <li class="active"><a href="/clients">Clients</a></li>
                 {% else %}
                     <li><a href="/clients">Clients</a></li>
                 {% endif %}
-                {% if entity == "Projects" %}
+                {% if entity.title() == "Projects" %}
                     <li class="active"><a href="/projects">Projects</a></li>
                 {% else %}
                     <li><a href="/projects">Projects</a></li>
                 {% endif %}
-                {% if entity == "Tasks" %}
+                {% if entity.title() == "Tasks" %}
                     <li class="active"><a href="/tasks">Tasks</a></li>
                 {% else %}
                     <li><a href="/tasks">Tasks</a></li>
                 {% endif %}
                 {# BUG: hilighting not working #}
-                {% if entity == "Reports" %}
+                {% if entity.title() == "Reports" %}
                     <li class="active"><a href="/reports">Reports</a></li>
                 {% else %}
                     <li><a href="/reports">Reports</a></li>
                 {% endif %}
-                {% if entity == "Help" %}
+                {% if entity.title() == "Help" %}
                     <li class="active"><a href="/help">Help</a></li>
                 {% else %}
                     <li><a href="/help">Help</a></li>
@@ -57,7 +57,7 @@
 
     {# display home page #} 
 
-        {% if entity == "Home" %}
+        {% if entity.title() == "Home" %}
         <p>Welcome to TimeTrack.</p>
         <div class="optionsContainer">
             <h3>I've done this before</h3>
@@ -132,7 +132,7 @@
                 </div> 
         </div>
 
-    {% elif entity == "Help" %}
+    {% elif entity.title() == "Help" %}
         <p>Projects are an ongoing set of tasks assigned by a client.</p>
         <p>Every project has an assigned client, a description, and a hourly billing rate. are an ongoing set of tasks assigned by a client.</p>
 
@@ -152,7 +152,7 @@
                             <a href="{{ entity.lower() }}/retrieve">Search</a>
                     </div>
                     <div>
-                        {% if entity == "Clients" %}
+                        {% if entity.title() == "Clients" %}
                             {# https://icons.getbootstrap.com/icons/person-plus/ #}
                             <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" class="bi bi-person-plus" viewBox="0 0 16 16">
                                 <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>

@@ -51,7 +51,7 @@ content-type: application/json
     "clientContactEmail":"rjw@example.co.uk"
 }
 
-### Find the Task
+### Find the client
 GET http://localhost:5000/api/clients/retrieve?clientOrganizationName=house
 
 
@@ -107,7 +107,7 @@ content-type: application/json
 
 }
 
-### Find the Employee
+### Find the client
 GET http://localhost:5000/api/clients/retrieve?clientContactFirstName=Charles
 
 ### Check update

@@ -6,8 +6,8 @@ from datetime import datetime as dt
 from models import Clients, Projects, Employees, Tasks, prepopulateDatabase, getSesssion
 import requests 
 
-import numpy as np
-import matplotlib.pyplot as plt 
+import plotly.express as px
+import plotly.graph_objects as go
 import io
 import base64
 
@@ -30,9 +30,13 @@ db = SQLAlchemy(app)
 # Set up dummy data 
 prepopulateDatabase()
 
+# Declare host name 
+host = 'localhost'
+
+# Declare port 
+port = 5000
 
 
-# CRUD operations? 
 
 
 # ---------- Home ---------- 
@@ -42,24 +46,51 @@ def home():
             return render_template("main.j2",entity="Home") 
 
 
-# ---------- Clients ---------- 
-@app.route('/clients',methods=["GET"])
-def clients():
-    return render_template("main.j2", entity="Clients")
+# ---------- Generic Functions ----------
+def mapEntity(entity):
+    # map passed entity to db object 
+    entityDict = {  'tasks':Tasks, 
+                    'projects':Projects, 
+                    'clients':Clients, 
+                    'employees':Employees
+                }
+    return entityDict[entity]
 
-@app.route('/clients/retrieve',methods=["GET"])
-def clientsRetrieve():
-    # results = retrieve(Clients, "all")
-    results = Clients.query.all()
-    columns = Clients.__table__.columns.keys() # https://stackoverflow.com/questions/6455560/how-to-get-column-names-from-sqlalchemy-result-declarative-syntax
 
-    return render_template("retrieve.j2", entity="Clients", data=[columns, results]) #data=[columns, results] 
+
+# ---------- Entity Landing ---------- 
+@app.route('/<entity>',methods=["GET"])
+def uiEntityLanding(entity):
+    return render_template("main.j2", entity=entity.title())
+
+# ----------- Retrieve ----------
+# @app.route('/<entity>/retrieve',methods=["GET"])
+# def uiRetrieve(entity):
+
+#     entityObj = mapEntity(entity)
+#     entityStr = entity
+#     columns = entityObj.__table__.columns.keys()   #https://stackoverflow.com/questions/6455560/how-to-get-column-names-from-sqlalchemy-result-declarative-syntax
+
+#     # Landing page 
+#     if len(request.args) == 0:  
+#         return render_template("retrieve.j2", entity=entityStr, data=[columns])
+
+#     # Retrieve all 
+#     elif "retrieveAll" in request.args and len(request.args) > 0:
+#         results = entityObj.query.all()
+#         return render_template("retrieve.j2", entity=entityStr, data=[columns, results])
+
+#     # Retrieve based on parameters 
+#     elif "retrieveAll" not in request.args and len(request.args) > 0:
+
+#         pass
+
 
 @app.route('/clients/create',methods=["GET", "POST"])
 def clientsCreate():
     if request.method == "GET":
         results = Clients.query.all()
-        columns = Clients.__table__.columns.keys() # https://stackoverflow.com/questions/6455560/how-to-get-column-names-from-sqlalchemy-result-declarative-syntax
+        columns = Clients.__table__.columns.keys() 
 
         return render_template("create.j2", entity="Clients", data=[]) #data=[columns, results] 
 
@@ -79,25 +110,24 @@ def clientsCreate():
         return render_template("create.j2", entity="Clients", data="success")
 
 
-
 # ---------- Projects ---------- 
 @app.route('/projects',methods=["GET"])
 def projects():
     if request.method == "GET": 
             return render_template("main.j2",entity="Projects")
 
-@app.route('/projects/retrieve',methods=["GET"])
-def projectsRetrieve():
-    results = Projects.query.all()
-    columns = Projects.__table__.columns.keys() # https://stackoverflow.com/questions/6455560/how-to-get-column-names-from-sqlalchemy-result-declarative-syntax
-    print(columns)
-    return render_template("retrieve.j2", entity="Projects", data=[columns, results]) #data=[columns, results] 
+# @app.route('/projects/retrieve',methods=["GET"])
+# def projectsRetrieve():
+#     results = Projects.query.all()
+#     columns = Projects.__table__.columns.keys() 
+#     print(columns)
+#     return render_template("retrieve.j2", entity="Projects", data=[columns, results]) #data=[columns, results] 
 
 @app.route('/projects/create',methods=["GET", "POST"])
 def projectsCreate():
     if request.method == "GET":
         # results = Projects.query.all()
-        columns = Projects.__table__.columns.keys() # https://stackoverflow.com/questions/6455560/how-to-get-column-names-from-sqlalchemy-result-declarative-syntax
+        columns = Projects.__table__.columns.keys() 
 
         return render_template("create.j2", entity="Projects", data=[]) #data=[columns, results] 
 
@@ -123,18 +153,18 @@ def employees():
     if request.method == "GET": 
             return render_template("main.j2", entity="Employees")
 
-@app.route('/employees/retrieve',methods=["GET"])
-def employeesRetrieve():
-    results = Employees.query.all()
-    columns = Employees.__table__.columns.keys() # https://stackoverflow.com/questions/6455560/how-to-get-column-names-from-sqlalchemy-result-declarative-syntax
-    print(columns)
-    return render_template("retrieve.j2", entity="Employees", data=[columns, results]) #data=[columns, results] 
+# @app.route('/employees/retrieve',methods=["GET"])
+# def employeesRetrieve():
+#     results = Employees.query.all()
+#     columns = Employees.__table__.columns.keys() 
+#     print(columns)
+#     return render_template("retrieve.j2", entity="Employees", data=[columns, results]) #data=[columns, results] 
 
 @app.route('/employees/create',methods=["GET", "POST"])
 def employeesCreate():
     if request.method == "GET":
         # results = Projects.query.all()
-        columns = Employees.__table__.columns.keys() # https://stackoverflow.com/questions/6455560/how-to-get-column-names-from-sqlalchemy-result-declarative-syntax
+        columns = Employees.__table__.columns.keys() 
 
         return render_template("create.j2", entity="Employees", data=[]) #data=[columns, results] 
 
@@ -161,19 +191,19 @@ def tasks():
     if request.method == "GET": 
             return render_template("main.j2", entity="Tasks")
 
-@app.route('/tasks/retrieve',methods=["GET"])
-def tasksRetrieve():
-    results = Tasks.query.all()
-    columns = Tasks.__table__.columns.keys() # https://stackoverflow.com/questions/6455560/how-to-get-column-names-from-sqlalchemy-result-declarative-syntax
-    print(columns)
-    return render_template("retrieve.j2", entity="Tasks", data=[columns, results]) #data=[columns, results] 
+# @app.route('/tasks/retrieve',methods=["GET"])
+# def tasksRetrieve():
+#     results = Tasks.query.all()
+#     columns = Tasks.__table__.columns.keys() 
+#     print(columns)
+#     return render_template("retrieve.j2", entity="Tasks", data=[columns, results]) #data=[columns, results] 
 
 
 @app.route('/tasks/create',methods=["GET", "POST"])
 def tasksCreate():
     if request.method == "GET":
         # results = Projects.query.all()
-        columns = Tasks.__table__.columns.keys() # https://stackoverflow.com/questions/6455560/how-to-get-column-names-from-sqlalchemy-result-declarative-syntax
+        columns = Tasks.__table__.columns.keys() 
 
         return render_template("create.j2", entity="Tasks", data=[]) #data=[columns, results] 
 
@@ -195,15 +225,7 @@ def tasksCreate():
         return render_template("create.j2", entity="Tasks", data="success")
 
 
-# ---------- API ---------- 
-def mapEntity(entity):
-    # map passed entity to db object 
-    entityDict = {  'tasks':Tasks, 
-                    'projects':Projects, 
-                    'clients':Clients, 
-                    'employees':Employees
-                }
-    return entityDict[entity]
+
 
 # ------- timeDelta -------
 @app.route('/api/timeDelta',methods=["GET"])
@@ -246,16 +268,16 @@ def apiCreate(entity):
 
     # # # Declare the new entity to add 
     if entity == "clients":
-        newEntity =  entityObj(clientOrganizationName=request.json['clientOrganizationName'], 
-                            clientContactFirstName=request.json['clientContactFirstName'], 
-                            clientContactLastName=request.json['clientContactLastName'], 
-                            clientContactEmail=request.json['clientContactEmail']
-                        )
+        newEntity =  entityObj( clientOrganizationName=request.json['clientOrganizationName'], 
+                                clientContactFirstName=request.json['clientContactFirstName'], 
+                                clientContactLastName=request.json['clientContactLastName'], 
+                                clientContactEmail=request.json['clientContactEmail']
+                            )
     elif entity == "projects":
         newEntity = entityObj(  clientId=request.json['clientId'],
                                 projectDescription=request.json['projectDescription'],
                                 projectBillRate=request.json['projectBillRate']
-                        )
+                            )
     elif entity == "tasks":
         newEntity = entityObj(  projectId=request.json['projectId'],
                                 taskDescription=request.json['taskDescription'],
@@ -263,14 +285,13 @@ def apiCreate(entity):
                                 taskTime=request.json['taskTime'],
                                 eeId=request.json['eeId'] 
                             )
-        
     elif entity == "employees":
         newEntity = entityObj(  eeFirstName=request.json['eeFirstName'],
                                 eeLastName=request.json['eeLastName'],
                                 eePosition=request.json['eePosition'],
                                 eeStatus=request.json['eeStatus']
-
                             )
+
     # add and commit the change, return a success code 
     session.add(newEntity)
     session.commit()
@@ -279,28 +300,38 @@ def apiCreate(entity):
 # ------- retrieve -------
 
 @app.route('/api/<entity>/retrieve',methods=["GET"])
-def apiRetrieve(entity, internal=None):
+@app.route('/<entity>/retrieve',methods=["GET"])
+def retrieve(entity):
 
     # map passed entity to db object 
     entityObj = mapEntity(entity) 
+    entityStr = entity
+    columns = entityObj.__table__.columns.keys()
 
-    # URL request to retrieveAll 
-    if 'retrieveAll' in request.args.keys() and len(request.args.keys()) == 1:
+    # UI - Landing page 
+    if len(request.args) == 0 and "/api/" not in str(request.url_rule):  
+        return (render_template("retrieve.j2", entity=entityStr, data=[columns]),200)
+
+    # UI / API - URL request to retrieveAll 
+    elif 'retrieveAll' in request.args.keys() and len(request.args.keys()) == 1:
         query = entityObj.query.all()
-        results = {entity:[i.getData() for i in query]}
 
-        return (jsonify(results),200)
+        # API
+        if "/api/" in str(request.url_rule):
+            results = {entity:[i.getData() for i in query]}
+            return (jsonify(results),200)
+        # UI
+        else: 
+            results = query 
+            return (render_template("retrieve.j2", entity=entityStr, data=[columns, results]),200)
 
     # Retrieve based on URL-specified filter 
-    elif len(request.args.keys()) >= 1:
+    elif "retrieveAll" not in request.args and len(request.args.keys()) >= 1:
 
-        # Set relevant entity columns 
-        cols = entityObj.__table__.columns.keys()
-
-        # Extract attributes passed in URL to set filter cols 
-        filters = [col for col in request.args.keys() if col in cols]
+        # Extract attributes passed in URL to set filter columns 
+        filters = [col for col in request.args.keys() if col in columns]
         if len(filters) > 0:
-            # Declare results 
+            # Declare results - a bit different than above
             results = {entity:[]}
             
             # Query db based on attributes/values in URL
@@ -320,14 +351,26 @@ def apiRetrieve(entity, internal=None):
                 for result in query:
                     if result not in results[entity] and i is not None:
                         results[entity].append(result.getData())
+
             # No results, return 204 Not Found 
             if len(results[entity]) == 0:
-                return (jsonify(results),204)
+                # API
+                if "/api/" in str(request.url_rule):
+                    return (jsonify(results),204)
+                # UI
+                else: 
+                    results = results[entity]
+                    return (render_template("retrieve.j2", entity=entityStr, data=[columns, results]),204)
                 
-            # Results found, return 200
-            return (jsonify(results),200)
+            # API - results found, return 200 Found
+            if "/api/" in str(request.url_rule):
+                return (jsonify(results),200)
+            # UI 
+            else:
+                results = results[entity]
+                return (render_template("retrieve.j2", entity=entityStr, data=[columns, results]),200)
 
-        # Else, return error 
+        # Else, for UI/API return 404 error 
         return ("ERROR: malformed request",404)
 
 
@@ -399,7 +442,10 @@ def confirmation():
 
 # ---------- Reports ---------- s
 
-def serve_img(plt):
+def serve_img(graphingPayload):
+    # as opposed to creating JPEG each time, can do one in memory
+    # and server per https://stackoverflow.com/questions/25140826/generate-image-embed-in-flask-with-a-data-uri 
+    # another example: https://stackoverflow.com/questions/7877282/how-to-send-image-generated-by-pil-to-browser 
     """
     Take image plot (matplotlib currently), return HTML img element with in-memory image
 
@@ -408,9 +454,27 @@ def serve_img(plt):
 
     Sourced from: 
     https://blog.furas.pl/python-flask-how-to-use-bytesio-in-flask-to-display-matplotlib-image-without-saving-in-file-gb.html
+   
+    graphingPayload = { "graph_type": "bar",
+                    "graph_height": 400, 
+                    "graph_width": 600, 
+                    "x_axis": x, 
+                    "y_axis": y,
+                    "export_type": "jpeg",
+                    "export_location": "report.jpeg",
+                    "graph_title": "report",
+                    "x_axis_label": "Date",
+                    "y_axis_label": "Hours"
+                    }
     """
+
+    fig = px.bar(   x=graphingPayload['x_axis'], 
+                    y=graphingPayload['y_axis'], 
+                    title=graphingPayload['graph_title']
+                )
+
     img = io.BytesIO()
-    plt.savefig(img, format="png")
+    fig.write_image(img, format=graphingPayload["export_type"])
     img.seek(0)
     plot_url = base64.b64encode(img.getvalue()).decode()
     return f'<img src="data:image/png;base64,{plot_url}">'
@@ -418,6 +482,10 @@ def serve_img(plt):
 
 @app.route('/reports',methods=["GET"])
 def reports():
+    # Notes
+    # consider adding granularity 
+    # supports:  
+    #   tasks by project: 'http://localhost:5000/reports/tasks?projectId=1'
 
     # Landing page
     if request.method == "GET" and len(request.args) == 0:
@@ -444,55 +512,34 @@ def reports():
         print(taskDatesTimes)
 
         # declare x and y arrays, prepare graph  
-        x = np.array([i[0] for i in taskDatesTimes])
-        y = np.array([i[1] for i in taskDatesTimes])
-        plt.bar(x, y, color="#FCB35F")
-        plt.xlabel("Date")
-        plt.ylabel("Hours")
-        # plt.savefig("static/plot.jpeg")
+        x = [i[0] for i in taskDatesTimes]
+        y = [i[1] for i in taskDatesTimes]
 
-        img = serve_img(plt)
+        # Specs according to 
+        graphingPayload = { "graph_type": "bar",
+                            "graph_height": 400, 
+                            "graph_width": 600, 
+                            "x_axis": x, 
+                            "y_axis": y,
+                            "export_type": "jpeg",
+                            "export_location": "report.jpeg",
+                            "graph_title": "report",
+                            "x_axis_label": "Date",
+                            "y_axis_label": "Hours"
+                            }
 
-
-        # graphingPayload = { "graph_type": "line",
-        #                     "graph_height": 400, 
-        #                     "graph_width": 600, 
-        #                     "x_axis": str(list(taskDates)), 
-        #                     "y_axis": str(list(taskTimes)),
-        #                     "export_type": "jpeg",
-        #                     "export_location": "export.jpeg",
-        #                     "graph_title": "report",
-        #                     "x_axis_label": "Date",
-        #                     "y_axis_label": "Amount"
-        #                     }
+        # Call graphing service               
+        img = serve_img(graphingPayload)
 
         # payload = json.loads(graphingPayload)
-        return render_template("reports.j2", idKey=idKey, data=data, img=serve_img(plt), entity="reports", reportEntity="tasks") #data=[taskDates,taskTimes]
+        return render_template("reports.j2", idKey=idKey, data=data, img=img, entity="reports", reportEntity="tasks") #data=[taskDates,taskTimes]
 
-    # Reports Notes
-        # consider adding granularity 
-        # supports:  
-        #   tasks by project: 'http://localhost:5000/reports/tasks?projectId=1'
 
-        # demo'd proof of concept with plotly and dropping jpegs
-        # into static directory. 
-
-        # as opposed to creating JPEG each time, can do one in memory
-        # and server per https://stackoverflow.com/questions/25140826/generate-image-embed-in-flask-with-a-data-uri 
-        # another example: https://stackoverflow.com/questions/7877282/how-to-send-image-generated-by-pil-to-browser 
-        # pull out the intersecting entity id (e.g., tasks by projectId, tasks by eeId) 
-
-# ---------- Reports ---------- 
-@app.route('/reports/client',methods=["GET"])
-def reportsClient():
-    r = requests.get('http://localhost:5000/api/tasks/retrieve?projectId=1')
-    print(r.text)
-    return r.text
-
+ 
 
 
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
-    host = 'localhost.'
+    # host = 'localhost.'
     app.run(host=host,port=port, debug=True)

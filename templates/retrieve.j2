@@ -8,6 +8,14 @@
 {% endblock %}
 {% block content %}
     <h1>Retrieve {{ entity }}</h1>
+
+    {# landing page #}
+    {% if data | length == 1 %}
+    <p>Choose "retrieve all" or search by parameters below.</p>
+    <a href="/{{ entity }}/retrieve?retrieveAll=true">Retrieve all</a>
+
+    {% endif %}
+
     <p><strong>Search results:</strong></p>
     <div class="resultsContainer">
         <table>
