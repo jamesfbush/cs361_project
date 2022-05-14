@@ -57,14 +57,14 @@ def home():
 
 # ---------- UI - Entity landing ---------- 
 @app.route('/<entity>',methods=["GET"])
-def uiEntityLanding(entity):
+def entityLanding(entity):
     return render_template("main.j2", entity=entity.title())
 
 
 # ----------- UI/API - Retrieve ----------
 @app.route('/api/<entity>/retrieve',methods=["GET"])
 @app.route('/<entity>/retrieve',methods=["GET"])
-def retrieve(entity):
+def retrieveEntity(entity):
 
     # map passed entity to db object 
     entityObj = mapEntity(entity) 
@@ -102,7 +102,6 @@ def retrieve(entity):
             for i in filters:
                 # Attribute passed in URL 
                 attr = getattr(entityObj,i) 
-                #  Value passed in URL 
                 val = request.args[i] 
                 # Numeric values require exact match
                 if val.isnumeric():
@@ -123,7 +122,6 @@ def retrieve(entity):
                 # UI
                 else: 
                     results = results[entity]
-                    # print("HEYo",len(results))
                     return (render_template("retrieve.j2", entity=entityStr, data=results)) # Had to remove 204
                     
             # API - results found, return 200 Found
@@ -138,176 +136,79 @@ def retrieve(entity):
         return ("ERROR: malformed request",404)
 
 
+# ------- UI / API create -------
+@app.route('/api/<entity>/create',methods=["POST"])
+@app.route('/<entity>/create',methods=["GET", "POST"])
 
-# ---Clients Create ------ 
-@app.route('/clients/create',methods=["GET", "POST"])
-def clientsCreate():
-    if request.method == "GET":
-        results = Clients.query.all()
-        columns = Clients.__table__.columns.keys() 
+def createEntity(entity):
+    
 
-        return render_template("create.j2", entity="Clients", data=[]) #data=[columns, results] 
+    # Map passed entity to entityObj
+    entityStr = entity
+    entityObj = mapEntity(entity)
 
-    if request.method == "POST":
-        formData = list(request.form.values())
-
-        #https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
- 
-        client = Clients(clientOrganizationName=formData[0], 
-                clientContactFirstName=formData[1], 
-                clientContactLastName=formData[2],
-                clientContactEmail=formData[3]
-            )
-        db.session.add(client)
-        db.session.commit()
-        
-        return render_template("create.j2", entity="Clients", data="success")
-
-
-# ---------- Projects ---------- 
-@app.route('/projects',methods=["GET"])
-def projects():
-    if request.method == "GET": 
-            return render_template("main.j2",entity="Projects")
-
-
-@app.route('/projects/create',methods=["GET", "POST"])
-def projectsCreate():
-    if request.method == "GET":
-        # results = Projects.query.all()
-        columns = Projects.__table__.columns.keys() 
-
-        return render_template("create.j2", entity="Projects", data=[]) #data=[columns, results] 
-
-    if request.method == "POST":
-        formData = list(request.form.values())
-
-        #https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
- 
-        project = Projects(clientId=formData[0], 
-                projectDescription=formData[1], 
-                projectBillRate=formData[2]
-            )
-        db.session.add(project)
-        db.session.commit()
-        
-        return render_template("create.j2", entity="Projects", data="success")
-
-
-
-# ---------- Employees ---------- 
-@app.route('/employees',methods=["GET"])
-def employees():
-    if request.method == "GET": 
-            return render_template("main.j2", entity="Employees")
-
-
-@app.route('/employees/create',methods=["GET", "POST"])
-def employeesCreate():
-    if request.method == "GET":
-        # results = Projects.query.all()
-        columns = Employees.__table__.columns.keys() 
-
-        return render_template("create.j2", entity="Employees", data=[]) #data=[columns, results] 
-
-    if request.method == "POST":
-        formData = list(request.form.values())
-
-        #https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
- 
-        ee = Employees(eeFirstName=formData[0], 
-                eeLastName=formData[1], 
-                eePosition=formData[2],
-                eeStatus=bool(formData[3])
-            )
-        db.session.add(ee)
-        db.session.commit()
-        
-        return render_template("create.j2", entity="Employees", data="success")
-
-
-# ---------- Tasks ---------- 
-
-@app.route('/tasks',methods=["GET"])
-def tasks():
-    if request.method == "GET": 
-            return render_template("main.j2", entity="Tasks")
-
-
-
-@app.route('/tasks/create',methods=["GET", "POST"])
-def tasksCreate():
+    # UI - landing page 
     if request.method == "GET":
         # results = Projects.query.all()
         columns = Tasks.__table__.columns.keys() 
+        print("ENTITY",entity)
+        return render_template("create.j2", entity=entity.title(), data=[]) #data=[columns, results] 
 
-        return render_template("create.j2", entity="Tasks", data=[]) #data=[columns, results] 
+    elif request.method == "POST":
+        print("BONGOS")
+        # UI/API - Otherwise, create new entity 
+        # # Get db session 
+        session = getSesssion()
 
-    if request.method == "POST":
-        formData = list(request.form.values())
-        print(formData)
+        # UI / API - extract form (UI) or json (API) data 
+        if "/api/" in str(request.url_rule):
+            formData = request.json
+        else:
+            formData = request.form 
 
-        #https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
- 
-        task = Tasks(projectId=formData[0], 
-                taskDescription=formData[1], 
-                taskDate=str(formData[2]),
-                taskTime=formData[3],
-                eeId=formData[4]
-            )
-        db.session.add(task)
-        db.session.commit()
+
+        # Declare the new entityObj to add 
+        # https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
+        if entity == "clients":
+
+
+            newEntity =  entityObj( clientOrganizationName=formData['clientOrganizationName'], 
+                                    clientContactFirstName=formData['clientContactFirstName'], 
+                                    clientContactLastName=formData['clientContactLastName'], 
+                                    clientContactEmail=formData['clientContactEmail']
+                                )
+
+
+        elif entity == "projects":
+            newEntity = entityObj(  clientId=formData['clientId'],
+                                    projectDescription=formData['projectDescription'],
+                                    projectBillRate=formData['projectBillRate']
+                                )
+        elif entity == "tasks":
+            newEntity = entityObj(  projectId=formData['projectId'],
+                                    taskDescription=formData['taskDescription'],
+                                    taskDate=formData['taskDate'],
+                                    taskTime=formData['taskTime'],
+                                    eeId=formData['eeId'] 
+                                )
+        elif entity == "employees":
+            newEntity = entityObj(  eeFirstName=formData['eeFirstName'],
+                                    eeLastName=formData['eeLastName'],
+                                    eePosition=formData['eePosition'],
+                                    eeStatus=formData['eeStatus']
+                                )
+
+        # add and commit the change, return a success code 
+        session.add(newEntity)
+        session.commit()
+
+        # API 
+        if "/api/" in str(request.url_rule):
+            return (jsonify({entity:[request.json]}),201)
         
-        return render_template("create.j2", entity="Tasks", data="success")
-
-
-
-
-
-
-# ------- create -------
-@app.route('/api/<entity>/create',methods=["POST"])
-def apiCreate(entity):
-    
-    #note there is a difference between request.json and request.json
-
-    # # Map passed entity to entityObj
-    entityObj = mapEntity(entity)
-
-    # # Get db session 
-    session = getSesssion()
-
-    # # # Declare the new entity to add 
-    if entity == "clients":
-        newEntity =  entityObj( clientOrganizationName=request.json['clientOrganizationName'], 
-                                clientContactFirstName=request.json['clientContactFirstName'], 
-                                clientContactLastName=request.json['clientContactLastName'], 
-                                clientContactEmail=request.json['clientContactEmail']
-                            )
-    elif entity == "projects":
-        newEntity = entityObj(  clientId=request.json['clientId'],
-                                projectDescription=request.json['projectDescription'],
-                                projectBillRate=request.json['projectBillRate']
-                            )
-    elif entity == "tasks":
-        newEntity = entityObj(  projectId=request.json['projectId'],
-                                taskDescription=request.json['taskDescription'],
-                                taskDate=request.json['taskDate'],
-                                taskTime=request.json['taskTime'],
-                                eeId=request.json['eeId'] 
-                            )
-    elif entity == "employees":
-        newEntity = entityObj(  eeFirstName=request.json['eeFirstName'],
-                                eeLastName=request.json['eeLastName'],
-                                eePosition=request.json['eePosition'],
-                                eeStatus=request.json['eeStatus']
-                            )
-
-    # add and commit the change, return a success code 
-    session.add(newEntity)
-    session.commit()
-    return (jsonify({entity:[request.json]}),201)
-
+        # UI 
+        else:
+            return render_template("create.j2", entity=entityStr, data="success")
 
 
 # ------- update -------
@@ -370,11 +271,7 @@ def appFaq():
             return render_template("faq.j2", entity="Help")
 
 
-# ---------- UI - Confirmation ---------- 
-@app.route('/confirmation',methods=["GET"])
-def confirmation():
-    if request.method == "GET": 
-            return render_template("confirmation.j2")
+
 
 # ---------- Reports ---------- s
 

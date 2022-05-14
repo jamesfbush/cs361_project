@@ -123,6 +123,7 @@ content-type: application/json
 {
     "projectId":2,
     "taskDescription":"Jumping up and down",
+    "taskDate": "2022-01-03",
     "taskTime":0.3,
     "eeId":2
 }
@@ -133,6 +134,7 @@ content-type: application/json
 {
     "projectId":2,
     "taskDescription":"Flapping arms all around",
+    "taskDate": "2022-01-04",
     "taskTime":2.3,
     "eeId":2
 }
@@ -143,6 +145,7 @@ content-type: application/json
 {
     "projectId":2,
     "taskDescription":"Hopping to and fro",
+    "taskDate": "2022-01-05",
     "taskTime":2.3,
     "eeId":2
 }
@@ -153,6 +156,7 @@ content-type: application/json
 {
     "projectId":2,
     "taskDescription":"Humming here we go",
+    "taskDate": "2022-01-06",
     "taskTime":1.0,
     "eeId":2
 }
@@ -163,6 +167,8 @@ content-type: application/json
 {
     "projectId":2,
     "taskDescription":"Rolling in the grass",
+    "taskDate": "2022-01-07",
     "taskTime":4.6,
     "eeId":2
 }
+
