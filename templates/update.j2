@@ -1,0 +1,62 @@
+{% extends "main.j2" %}
+{% block title %}Index{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+        .important { color: #336699; }
+    </style>
+{% endblock %}
+{% block content %}
+    <h1>Update {{ dbEntity }}</h1>
+
+    {% if updated %}
+    <h3> Update successful </h3>
+    {% for i in updateRecord.keys() %}
+    <p><b>{{ i }}:</b> </p>
+    <p>{{ updateRecord[i] }}</p>
+    {% endfor %}
+    <a href=/{{entity}}/retrieve>Go back to search.</a>
+    {% else %}
+
+
+
+    <div class="form-container">
+        <div class="form-group">
+            <form action="/{{ entity.lower() }}/update" method="POST">
+                <div class="form-row">
+                    <label for={{ entityIdKey }}>{{ entity[:-1].title() }} ID</label>
+                    <br>
+                    <input type="text" name={{ entityIdKey }} value="{{ entityIdVal }}" readonly style="background-color: #F5F5F5">   
+                </div>
+                {% for key, value in colStrs.items() %}
+                <div class="form-row">
+
+                    <label for={{ key }}>{{ value }}</label>
+                    <br>
+                        {# https://rickalm.blogspot.com/2018/08/testing-for-data-types-in-jinja.html #}
+                        {% if data[key] is number %}
+                            {% if key == "projectBillRate" %}
+                                <input type="number" step=".01"name={{ key }} value="{{ data[key] }}">   
+                            {% elif key == "taskTime" %}
+                                <input type="number" max="24" min="0.1" step=".1" name={{ key }} value="{{ data[key] }}">   
+                            {% else %}
+                                <input type="number" name={{ key }} value="{{ data[key] }}">   
+
+                            {% endif %}
+                        {% elif data[key] is string %}
+                            {% if data[key]|length >= 30 %}
+                            <input type="text" size="{{data[key]|length}}" name={{ key }} value="{{ data[key] }}">   
+                            {% else %}
+                            <input type="text" name={{ key }} value="{{ data[key] }}">   
+                            {% endif %}
+                        {% endif %} 
+                     </div>    
+                {% endfor %}
+                <div class="form-row">
+                    <input type="submit" class="submit-button" value="Submit">
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}

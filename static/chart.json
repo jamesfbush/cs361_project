@@ -1,0 +1,1 @@
+{"graph_type": "bar", "graph_height": 400, "graph_width": 600, "x_axis": ["2020-01-02", "2020-01-03", "2020-01-04", "2020-01-05", "2020-01-08", "2020-01-20"], "y_axis": [3.4, 2.5, 2.1, 4.4, 2.1, 15.2], "export_type": "jpeg", "export_location": "report", "graph_title": "report", "x_axis_label": "Date", "y_axis_label": "Hours"}
