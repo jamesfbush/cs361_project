@@ -64,11 +64,12 @@ body {
 }
 
 #footer {
+  border: solid #d6d6d6;
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
   /* border-radius: 10px; */
   padding: 20px; 
-  background-color: rgb(225, 225, 225);
+  background-color: #e1e1e1;
 }
 
 table {
@@ -142,7 +143,8 @@ tr:nth-child(even) {
 
 .form-row > label {
   border: 10px solid white;
-  color: black;
+  font-weight:bolder;
+  color: #56565A;
   font-size: .9rem;
 }
 
@@ -158,8 +160,8 @@ tr:nth-child(even) {
   font-family: sans-serif;
   color:  #FF6201;
   padding: 10px;
-  border: solid 1.3px #FF6201; 
-  border-radius:3px
+  border: solid 1.4px #FF6201; 
+  border-radius: 5px
 }
 
 .submit-button:hover {

@@ -3,8 +3,8 @@
 GET http://localhost:5000/api/timeDelta?startTime=1577865600&endTime=1641121445
 
 
-###taskTrack API
-GET http://localhost:5000/api/tasks/retrieve?retrieveAll
+###taskTrack API // HTTPS
+GET https://localhost:5000/api/tasks/retrieve?retrieveAll
 ### Retrieve all clients
 GET http://localhost:5000/api/clients/retrieve?retrieveAll
 
@@ -103,7 +103,7 @@ content-type: application/json
 
 {
     "clientContactFirstName":"Chuck",
-    "clientContactLastName":"Taylor"
+    "clientContactLastName":"Mingus"
 
 }
 

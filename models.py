@@ -51,12 +51,7 @@ class Clients(db.Model):
                         'clientContactLastName':self.clientContactLastName,
                         'clientContactEmail':self.clientContactEmail
                 })
-    def setData(self,columnName,columnVal):
-        col = getattr(self, columnName)
-        print(col)
-        col = columnVal
-        print(col)
-        # print(self.clientContactFirstName)
+    
 
 
 
@@ -84,25 +79,25 @@ class Projects(db.Model):
 
 
 class Employees(db.Model):
-    eeId = db.Column(db.Integer, primary_key=True, nullable=False, unique=True) #Auto increment? 
-    eeFirstName = db.Column(db.String(35), nullable=False)
-    eeLastName = db.Column(db.String(35), nullable=False)
-    eePosition = db.Column(db.String(35), nullable=False)
-    eeStatus = db.Column(db.Boolean, nullable=False)
+    employeeId = db.Column(db.Integer, primary_key=True, nullable=False, unique=True) #Auto increment? 
+    employeeFirstName = db.Column(db.String(35), nullable=False)
+    employeeLastName = db.Column(db.String(35), nullable=False)
+    employeePosition = db.Column(db.String(35), nullable=False)
+    employeeStatus = db.Column(db.Boolean, nullable=False)
 
     
     def __repr__(self):
         """Return information about object when called"""
-        return f'eeId: {self.eeId}, eeFirstName: {self.eeFirstName}, eeLastName: {self.eeLastName}'
+        return f'employeeId: {self.employeeId}, employeeFirstName: {self.employeeFirstName}, employeeLastName: {self.employeeLastName}'
 
     
     def getData(self):
         """Return dict of all columns and values"""
-        return dict({   'eeId':self.eeId,
-                        'eeFirstName':self.eeFirstName,
-                        'eeLastName':self.eeLastName,
-                        'eePosition':self.eePosition,
-                        'eeStatus':self.eeStatus
+        return dict({   'employeeId':self.employeeId,
+                        'employeeFirstName':self.employeeFirstName,
+                        'employeeLastName':self.employeeLastName,
+                        'employeePosition':self.employeePosition,
+                        'employeeStatus':self.employeeStatus
                 })
 
 
@@ -114,7 +109,7 @@ class Tasks(db.Model):
     taskDescription = db.Column(db.String(240), nullable=False)
     taskDate = db.Column(db.String(10), nullable=False)# new
     taskTime = db.Column(db.Numeric(4,2), nullable=False)
-    eeId = db.Column(db.Integer, db.ForeignKey(Employees.eeId), nullable=False)
+    employeeId = db.Column(db.Integer, db.ForeignKey(Employees.employeeId), nullable=False)
     # Returns information about object when called 
     def __repr__(self):
         """Return information about object when called"""
@@ -128,7 +123,7 @@ class Tasks(db.Model):
                 'taskDescription':self.taskDescription,
                 'taskDate':self.taskDate,
                 'taskTime':float(self.taskTime),
-                'eeId':self.eeId
+                'employeeId':self.employeeId
                 })
 
 def prepopulateDatabase():
@@ -191,10 +186,10 @@ def prepopulateDatabase():
     # print("Populating test database.")
 
     for i in EmployeesLst: 
-        ee = Employees(     eeFirstName = i[0],
-                            eeLastName = i[1],
-                            eePosition = i[2],
-                            eeStatus = i[3]
+        ee = Employees(     employeeFirstName = i[0],
+                            employeeLastName = i[1],
+                            employeePosition = i[2],
+                            employeeStatus = i[3]
                     )
 
 
@@ -205,7 +200,7 @@ def prepopulateDatabase():
     #     print(i)
 
     # -------------------------- Populate Tasks table
-    # projectId, taskDescription, taskDate, taskTime, eeId
+    # projectId, taskDescription, taskDate, taskTime, employeeId
     TasksLst = [    (1, 'Pulled weeds all damn day', '2020-01-02',3.4, 1),
                     (1, 'Finished pulling weeds', '2020-01-03',2.4, 1),
                     (1, 'Pruned begonias', '2020-01-08',2.1, 1),
@@ -223,7 +218,7 @@ def prepopulateDatabase():
                         taskDescription= i[1], 
                         taskDate=i[2],
                         taskTime= i[3], 
-                        eeId = i[4] 
+                        employeeId = i[4] 
                     )
 
 

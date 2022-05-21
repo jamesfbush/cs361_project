@@ -5,11 +5,19 @@ import os
 from datetime import datetime as dt
 from models import Clients, Projects, Employees, Tasks, prepopulateDatabase, getSesssion
 import requests 
+import json 
+
 
 import plotly.express as px
 import plotly.graph_objects as go
 import io
 import base64
+
+# Handling report image file 
+import shutil
+from os.path import exists
+import time as tm
+
 
 # Flask object
 app = Flask(__name__)
@@ -38,7 +46,7 @@ port = 5000
 
 
 # ---------- Helpers ----------
-def mapEntity(entity):
+def mapStringToEntity(entity):
     # map passed entity to db object 
     entityDict = {  'tasks':Tasks, 
                     'projects':Projects, 
@@ -46,6 +54,33 @@ def mapEntity(entity):
                     'employees':Employees
                 }
     return entityDict[entity]
+
+def mapAttributesToString(entity,column=None):
+
+    stringDict = {  "clients":  {   'clientOrganizationName': 'Organization', 
+                                    'clientContactFirstName': 'First name' ,
+                                    'clientContactLastName': 'Last name',
+                                    'clientContactEmail': 'Email'
+                                },
+                    "projects": {   'clientId': 'Client ID',
+                                    'projectDescription': 'Description',
+                                    'projectBillRate':'Bill rate'
+                                },
+                    "tasks":    {   'projectId': 'Project ID',
+                                    'taskDescription': 'Description',
+                                    'taskDate':'Date',
+                                    'taskTime':'Time',
+                                    'employeeId':'Employee ID'    
+                                },
+                    "employees":{   'employeeFirstName':'First name',
+                                    'employeeLastName':'Last name',
+                                    'employeePosition':'Position',
+                                    'employeeStatus':'Status (current/former)'
+                                }
+                }
+    if column is not None:
+        return stringDict[entity][column]
+    return stringDict[entity]
 
 
 # ---------- UI - Main ---------- 
@@ -67,9 +102,10 @@ def entityLanding(entity):
 def retrieveEntity(entity):
 
     # map passed entity to db object 
-    entityObj = mapEntity(entity) 
+    entityObj = mapStringToEntity(entity) 
     entityStr = entity
     columns = entityObj.__table__.columns.keys()
+    
 
     # UI - Landing page 
     if len(request.args) == 0 and "/api/" not in str(request.url_rule):  
@@ -130,6 +166,7 @@ def retrieveEntity(entity):
             # UI 
             else:
                 results = results[entity]
+                print(type(result),results)
                 return (render_template("retrieve.j2", entity=entityStr, data=[columns, results]),200)
 
         # Else, for UI/API return 404 error 
@@ -145,7 +182,7 @@ def createEntity(entity):
 
     # Map passed entity to entityObj
     entityStr = entity
-    entityObj = mapEntity(entity)
+    entityObj = mapStringToEntity(entity)
 
     # UI - landing page 
     if request.method == "GET":
@@ -155,7 +192,7 @@ def createEntity(entity):
         return render_template("create.j2", entity=entity.title(), data=[]) #data=[columns, results] 
 
     elif request.method == "POST":
-        print("BONGOS")
+
         # UI/API - Otherwise, create new entity 
         # # Get db session 
         session = getSesssion()
@@ -170,8 +207,6 @@ def createEntity(entity):
         # Declare the new entityObj to add 
         # https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
         if entity == "clients":
-
-
             newEntity =  entityObj( clientOrganizationName=formData['clientOrganizationName'], 
                                     clientContactFirstName=formData['clientContactFirstName'], 
                                     clientContactLastName=formData['clientContactLastName'], 
@@ -189,13 +224,13 @@ def createEntity(entity):
                                     taskDescription=formData['taskDescription'],
                                     taskDate=formData['taskDate'],
                                     taskTime=formData['taskTime'],
-                                    eeId=formData['eeId'] 
+                                    employeeId=formData['employeeId'] 
                                 )
         elif entity == "employees":
-            newEntity = entityObj(  eeFirstName=formData['eeFirstName'],
-                                    eeLastName=formData['eeLastName'],
-                                    eePosition=formData['eePosition'],
-                                    eeStatus=formData['eeStatus']
+            newEntity = entityObj(  employeeFirstName=formData['employeeFirstName'],
+                                    employeeLastName=formData['employeeLastName'],
+                                    employeePosition=formData['employeePosition'],
+                                    employeeStatus=formData['employeeStatus']
                                 )
 
         # add and commit the change, return a success code 
@@ -213,31 +248,57 @@ def createEntity(entity):
 
 # ------- update -------
 @app.route('/api/<entity>/update',methods=["PUT"])
+@app.route('/<entity>/update',methods=["GET", "POST"])
 def apiUpdate(entity):
 
-    # map passed entity to db object, extract entityIdKey, entityIdVal
-    entityObj = mapEntity(entity) 
-    entityIdKey =  str(list(request.args.keys())[0]) 
-    entityIdVal = str(request.args[list(request.args.keys())[0]])
+    # get entity db object and session
+    entityObj = mapStringToEntity(entity) 
+    session = getSesssion()
+
+    # -------UI--------------
+    if request.method == "GET":
+        entityIdKey =  str(list(request.args.keys())[0]) 
+        entityIdVal = str(request.args[list(request.args.keys())[0]])
+
+        # Extract object attribute from entityObj for the entityIdKey
+        attr = getattr(entityObj,entityIdKey)
+
+        colStrs = mapAttributesToString(entity)
+        query = entityObj.query.filter(attr==entityIdVal).first().getData()
+        return render_template("update.j2",entity=entity, colStrs=colStrs, data=query, entityIdKey=entityIdKey, entityIdVal=entityIdVal)
+
+    # -------UI--------------
+    if request.method == "POST":
+        entityIdKey = f'{entity[:-1]}Id'
+        entityIdVal = request.form[entityIdKey]
+        updateRecord = dict(request.form)
+        
+    # -------API--------------
+    if request.method == "PUT":
+        entityIdKey =  str(list(request.args.keys())[0]) 
+        entityIdVal = str(request.args[list(request.args.keys())[0]])
+        updateRecord = request.json
 
     # Extract object attribute from entityObj for the entityIdKey
     attr = getattr(entityObj,entityIdKey)
-    session = getSesssion()
     # Pass request.json form directly to query/update
-    entityObj.query.filter(attr==entityIdVal).update(request.json)
+    entityObj.query.filter(attr==entityIdVal).update(updateRecord)
     # Look up updated record to return in response 
     query = entityObj.query.filter(attr==entityIdVal).first().getData()
     # Commit change 
     session.commit()
 
+    if request.method == "POST":
+        return render_template("update.j2",entity=entity, updated=True, updateRecord=updateRecord)
     return (jsonify(query),200)
-    
+
+        
 
 # ------- delete -------
 @app.route('/api/<entity>/delete',methods=["DELETE"])
 def apiDelete(entity):
     # Map passed entity to a db entity 
-    entityObj = mapEntity(entity)
+    entityObj = mapStringToEntity(entity)
 
     entityIdKey = list(request.args.keys())[0]
 
@@ -339,10 +400,10 @@ def reports():
         
         # query db by the intersectId and value to obtain data in json 
         data = requests.get(f'http://localhost:5000/api/{reportEntity}/retrieve?{idKey}={idVal}').json()[reportEntity]
-        
+        print(data)
+
         # convert dict to list of dates and times sorted by date
         taskDatesTimes = sorted({task['taskDate']:task['taskTime'] for task in data}.items(), key=lambda item:item[0])
-        print(taskDatesTimes)
 
         # declare x and y arrays, prepare graph  
         x = [i[0] for i in taskDatesTimes]
@@ -355,16 +416,43 @@ def reports():
                             "x_axis": x, 
                             "y_axis": y,
                             "export_type": "jpeg",
-                            "export_location": "report.jpeg",
+                            "export_location": "report",
                             "graph_title": "report",
                             "x_axis_label": "Date",
                             "y_axis_label": "Hours"
                             }
 
         # Call graphing service               
-        img = serve_img(graphingPayload)
+        # img = serve_img(graphingPayload)
 
-        # payload = json.loads(graphingPayload)
+        # Save payload to json to microservice directory  
+        with open('static/chart.json', 'w') as outfile:
+            json.dump(graphingPayload, outfile)
+
+        # Move newly created image file to static 
+
+        # Declare new graphFileName
+        graphFileName = f"{graphingPayload['export_location']}.{graphingPayload['export_type']}"
+
+        # Declare new img element with src path for image 
+        img = f'<img src="static/{graphFileName}">'
+
+        # # Check for presence of image from microservice 
+        file_exists = False 
+        count = 1
+
+        sourcePath = f"static/{graphFileName}"
+
+        while file_exists is not True: 
+            file_exists = exists(sourcePath)
+            print(file_exists, sourcePath)
+            tm.sleep(0.5)
+            count += 1
+            print("Checkig for file...",count)
+
+        # If exists, move to static director to serve in report template
+        # shutil.move(sourcePath, img)
+
         return render_template("reports.j2", idKey=idKey, data=data, img=img, entity="reports", reportEntity="tasks") #data=[taskDates,taskTimes]
 
 

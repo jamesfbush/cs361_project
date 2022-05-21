@@ -46,11 +46,11 @@
                 </tr>
             </thead>
             <tbody>
-                {% for i in data[1] %}
+                {% for i in data %}
                     <tr>
                         {# https://stackoverflow.com/questions/35407008/using-getattr-in-jinja2-gives-me-an-error-jinja2-exceptions-undefinederror-ge #}
-                        {% for j in data[0] %}
-                            <td> {{ i[j] }} </td>
+                        {% for j in i.values() %}
+                            <td> {{ j }} </td>
                         {% endfor %}
                     </tr>
                 {% endfor %}

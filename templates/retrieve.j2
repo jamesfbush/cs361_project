@@ -44,6 +44,8 @@
                     {% for i in data[0] %}
                         <th> {{ i }} </th>
                     {% endfor %}
+                    <th>Update</th>
+                    <th>Delete</th>
                 </tr>
             </thead>
             <tbody>
@@ -53,6 +55,9 @@
                         {% for j in data[0] %}
                             <td> {{ i[j] }} </td>
                         {% endfor %}
+                        {% set entityId = entity[:-1] ~ 'Id' %}
+                        <td><a href="/{{ entity }}/update?{{entity[:-1]}}Id={{ i[entityId] }}">📝</a></td> {# left off here #}
+                        <td><a href="/{{ entity }}/delete?{{entity[:-1]}}Id={{ i[entityId] }}">🗑</a></td>
                     </tr>
                 {% endfor %}
             </tbody>
