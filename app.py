@@ -21,12 +21,9 @@ import time as tm
 
 # Flask object
 app = Flask(__name__)
-# # https://flask.palletsprojects.com/en/2.1.x/tutorial/layout/ 
-# Based off of this intro 
-# https://flask-sqlalchemy.palletsprojects.com/en/2.x/quickstart/
 
 # Configure database 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db' # SQLite
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database/timeTrack.db' # SQLite
 # app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql://{user}:{passwd}@{host}/{db}' # MySQL
 
 # Other db config
@@ -47,7 +44,9 @@ port = 5000
 
 # ---------- Helpers ----------
 def mapStringToEntity(entity):
-    # map passed entity to db object 
+    """
+    Map passed entity to an object in db model.
+    """
     entityDict = {  'tasks':Tasks, 
                     'projects':Projects, 
                     'clients':Clients, 
@@ -56,6 +55,9 @@ def mapStringToEntity(entity):
     return entityDict[entity]
 
 def mapAttributesToString(entity,column=None):
+    """
+    Map entity and column strings to UI-friendly column descriptions. 
+    """
 
     stringDict = {  "clients":  {   'clientOrganizationName': 'Organization', 
                                     'clientContactFirstName': 'First name' ,
@@ -106,7 +108,6 @@ def retrieveEntity(entity):
     entityStr = entity
     columns = entityObj.__table__.columns.keys()
     
-
     # UI - Landing page 
     if len(request.args) == 0 and "/api/" not in str(request.url_rule):  
         return (render_template("retrieve.j2", entity=entityStr, data=[columns]),200)
@@ -178,7 +179,12 @@ def retrieveEntity(entity):
 @app.route('/<entity>/create',methods=["GET", "POST"])
 
 def createEntity(entity):
-    
+    """
+    Create an instance of a database entity. 
+
+    Keyword arguments: 
+    entity -- string, passed through URL, e.g., "Clients", "Tasks", etc 
+    """
 
     # Map passed entity to entityObj
     entityStr = entity
@@ -212,8 +218,6 @@ def createEntity(entity):
                                     clientContactLastName=formData['clientContactLastName'], 
                                     clientContactEmail=formData['clientContactEmail']
                                 )
-
-
         elif entity == "projects":
             newEntity = entityObj(  clientId=formData['clientId'],
                                     projectDescription=formData['projectDescription'],
@@ -249,7 +253,7 @@ def createEntity(entity):
 # ------- update -------
 @app.route('/api/<entity>/update',methods=["PUT"])
 @app.route('/<entity>/update',methods=["GET", "POST"])
-def apiUpdate(entity):
+def updateEntity(entity):
 
     # get entity db object and session
     entityObj = mapStringToEntity(entity) 
@@ -295,8 +299,17 @@ def apiUpdate(entity):
         
 
 # ------- delete -------
+@app.route('/<entity>/delete',methods=["GET","POST"])
 @app.route('/api/<entity>/delete',methods=["DELETE"])
-def apiDelete(entity):
+def deleteEntity(entity):
+
+    # UI - generate landing page with confirmation prompt 
+    if request.method == "GET":
+        render_template("delete.j2", entity=entity)
+
+    # Delete the entity 
+
+
     # Map passed entity to a db entity 
     entityObj = mapStringToEntity(entity)
 
@@ -306,8 +319,8 @@ def apiDelete(entity):
 
     entityIdVal = request.args[entityIdKey]
 
-    query = entityObj.query.filter(attr==1).first() #entityIdKey==int(entityIdVal)
-    
+    query = entityObj.query.filter(attr==entityIdVal).first() #entityIdKey==int(entityIdVal)
+    deleteRecord = str(query)
     print("Deleting:",entityIdKey, entityIdVal)
 
     # Delete
@@ -315,7 +328,11 @@ def apiDelete(entity):
     session.delete(query)
     session.commit()
 
-    return (jsonify("deleted"),200)
+    if "/api/" in str(request.url_rule):
+
+        return (jsonify("deleted"),200)
+    else:
+        return render_template("delete.j2",entity=entity, deleteRecord=deleteRecord)
 
 
 # ---------- UI - Help ---------- 
@@ -334,7 +351,7 @@ def appFaq():
 
 
 
-# ---------- Reports ---------- s
+# ---------- UI - Reports ---------- s
 
 def serve_img(graphingPayload):
     # as opposed to creating JPEG each time, can do one in memory
@@ -422,14 +439,12 @@ def reports():
                             "y_axis_label": "Hours"
                             }
 
-        # Call graphing service               
+        # Call graphing service to generate image in-memory                
         # img = serve_img(graphingPayload)
 
         # Save payload to json to microservice directory  
         with open('static/chart.json', 'w') as outfile:
             json.dump(graphingPayload, outfile)
-
-        # Move newly created image file to static 
 
         # Declare new graphFileName
         graphFileName = f"{graphingPayload['export_location']}.{graphingPayload['export_type']}"

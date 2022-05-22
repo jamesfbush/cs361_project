@@ -1,0 +1,25 @@
+{% extends "main.j2" %}
+{% block title %}Index{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style type="text/css">
+        .important { color: #336699; }
+    </style>
+{% endblock %}
+{% block content %}
+    <h1>Delete {{ dbEntity }}</h1>
+
+    <div class="form-container">
+        <div class="form-group">
+            {% if deleteRecord %}
+            <h3>{{ entity.capitalize()[:-1] }} successfully deleted.</h3>
+            <p></b> {{ deleteRecord }} </b></p>
+            {% else %}
+            <p>Delete {{ entity.capitalize() }}?</p>
+
+            {% endif %}
+        </div>
+    </div>
+
+
+{% endblock %}
