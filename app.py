@@ -1,19 +1,20 @@
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy 
 from dotenv import load_dotenv, find_dotenv
-import os 
+import os
 from datetime import datetime as dt
-from models import Clients, Projects, Employees, Tasks, prepopulateDatabase, getSesssion
+from model import Clients, Projects, Employees, Tasks, prepopulateDatabase, getSesssion
 import requests 
 import json 
 
-
-import plotly.express as px
-import plotly.graph_objects as go
+# Graphing 
+# import plotly.express as px
+# import plotly.graph_objects as go
 import io
 import base64
 
 # Handling report image file 
+from chart_ms import chart
 import shutil
 from os.path import exists
 import time as tm
@@ -359,9 +360,11 @@ def appFaq():
 
 
 
-# ---------- UI - Reports ---------- s
+# ---------- UI - Reports ----------
 
-def serve_img(graphingPayload):
+
+# ---------- Report helpers ----------
+def serveChartInMemory(graphingPayload):
     # as opposed to creating JPEG each time, can do one in memory
     # and server per https://stackoverflow.com/questions/25140826/generate-image-embed-in-flask-with-a-data-uri 
     # another example: https://stackoverflow.com/questions/7877282/how-to-send-image-generated-by-pil-to-browser 
@@ -386,19 +389,50 @@ def serve_img(graphingPayload):
                     "y_axis_label": "Hours"
                     }
     """
+    # Option to run natively  
+    # fig = px.bar(   x=graphingPayload['x_axis'], 
+    #                 y=graphingPayload['y_axis'], 
+    #                 title=graphingPayload['graph_title']
+    #             )
 
-    fig = px.bar(   x=graphingPayload['x_axis'], 
-                    y=graphingPayload['y_axis'], 
-                    title=graphingPayload['graph_title']
-                )
-
+    fig = chart(graphingPayload)
     img = io.BytesIO()
     fig.write_image(img, format=graphingPayload["export_type"])
     img.seek(0)
     plot_url = base64.b64encode(img.getvalue()).decode()
     return f'<img src="data:image/png;base64,{plot_url}">'
 
+def getChartFromMS(graphingPayload):
 
+         # Save graphingPayload to json to microservice directory  
+        with open('static/chart.json', 'w') as outfile:
+            json.dump(graphingPayload, outfile)
+
+        # Declare new graphFileName
+        graphFileName = f"{graphingPayload['export_location']}.{graphingPayload['export_type']}"
+
+        # Declare new img element with src path for image 
+        img = f'<img src="static/{graphFileName}">'
+
+        # # Check for presence of image from microservice 
+        file_exists = False 
+        count = 1
+
+        sourcePath = f"static/{graphFileName}"
+
+        while file_exists is not True: 
+            file_exists = exists(sourcePath)
+            print(file_exists, sourcePath)
+            tm.sleep(0.5)
+            count += 1
+            print("Checking for file...",count)
+
+        # If exists, move to static director to serve in report template
+        # shutil.move(sourcePath, img)
+        return img
+
+
+# ---------- UI - Reports route ----------
 @app.route('/reports',methods=["GET"])
 def reports():
     # Notes
@@ -448,33 +482,10 @@ def reports():
                             }
 
         # Call graphing service to generate image in-memory                
-        # img = serve_img(graphingPayload)
+        # img = serveChartInMemory(graphingPayload)
 
-        # Save payload to json to microservice directory  
-        with open('static/chart.json', 'w') as outfile:
-            json.dump(graphingPayload, outfile)
-
-        # Declare new graphFileName
-        graphFileName = f"{graphingPayload['export_location']}.{graphingPayload['export_type']}"
-
-        # Declare new img element with src path for image 
-        img = f'<img src="static/{graphFileName}">'
-
-        # # Check for presence of image from microservice 
-        file_exists = False 
-        count = 1
-
-        sourcePath = f"static/{graphFileName}"
-
-        while file_exists is not True: 
-            file_exists = exists(sourcePath)
-            print(file_exists, sourcePath)
-            tm.sleep(0.5)
-            count += 1
-            print("Checkig for file...",count)
-
-        # If exists, move to static director to serve in report template
-        # shutil.move(sourcePath, img)
+        # see getChartFromMS
+        img = getChartFromMS(graphingPayload)
 
         return render_template("reports.j2", idKey=idKey, data=data, img=img, entity="reports", reportEntity="tasks") #data=[taskDates,taskTimes]
 
@@ -509,6 +520,5 @@ def timeDeltaAPI():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5000))
-    # host = 'localhost.'
+    port = int(os.environ.get('PORT', port))
     app.run(host=host,port=port, debug=True)
