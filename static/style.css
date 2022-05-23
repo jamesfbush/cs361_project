@@ -5,10 +5,12 @@ h1 {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-h2 {
-  color: grey;
+
+h2, h3 {
+  color: #56565A;
   font-family: Arial, Helvetica, sans-serif;
 }
+
 
 a {
   color: #FF6201
@@ -79,12 +81,25 @@ table {
 }
 th {
   border-bottom: 1px solid #e2e1e1;
+  text-align: left;
 }
+
 td {
-  padding: 7px
+  padding: 10px
 }
 tr:nth-child(even) {
   background-color: #e2e1e1;
+}
+
+.display-container {
+  text-align: left;
+  max-width: 1700px;
+  background-color: #fffefe;
+  border: 1px solid #e2e2e2;
+  padding: 15px;
+}
+.display-row {
+  padding: 10px;
 }
 
 .flex-container {
@@ -149,6 +164,19 @@ tr:nth-child(even) {
 }
 
 .form-row > input[type=text] {
+  width: 50%;
+  padding: 10px 15px;
+  margin: 8px 0;
+  box-sizing: border-box;
+}
+
+.form-row > input[type=number] {
+  width: 50%;
+  padding: 10px 15px;
+  margin: 8px 0;
+  box-sizing: border-box;
+}
+.form-row > input[type=date] {
   width: 50%;
   padding: 10px 15px;
   margin: 8px 0;

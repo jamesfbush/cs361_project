@@ -57,6 +57,10 @@ def mapStringToEntity(entity):
 def mapAttributesToString(entity,column=None):
     """
     Map entity and column strings to UI-friendly column descriptions. 
+
+    Keyword arguments: 
+    entity -- string representation of db object, e.g., "clients", "projects"
+    column -- optional - will return a single column description 
     """
 
     stringDict = {  "clients":  {   'clientOrganizationName': 'Organization', 
@@ -107,10 +111,12 @@ def retrieveEntity(entity):
     entityObj = mapStringToEntity(entity) 
     entityStr = entity
     columns = entityObj.__table__.columns.keys()
+    colStrs = mapAttributesToString(entity) #dict - keys are col names and vals are col descriptions
+
     
     # UI - Landing page 
     if len(request.args) == 0 and "/api/" not in str(request.url_rule):  
-        return (render_template("retrieve.j2", entity=entityStr, data=[columns]),200)
+        return (render_template("retrieve.j2", entity=entityStr, data=[columns], colStrs=colStrs),200)
 
     # UI / API - URL request to retrieveAll 
     elif 'retrieveAll' in request.args.keys() and len(request.args.keys()) == 1:
@@ -123,7 +129,7 @@ def retrieveEntity(entity):
         # UI
         else: 
             results = query 
-            return (render_template("retrieve.j2", entity=entityStr, data=[columns, results]),200)
+            return (render_template("retrieve.j2", entity=entityStr, data=[columns, results],colStrs=colStrs),200)
 
     # Retrieve based on URL-specified filter 
     elif "retrieveAll" not in request.args and len(request.args.keys()) >= 1:
@@ -147,6 +153,7 @@ def retrieveEntity(entity):
                 elif val.isnumeric() is False:
                     query = entityObj.query.filter(attr.like(f'%{val}%')).all()
                 # Add each unique query result to results dict
+                # BUG is returning duplicates, e.g., query id=2 and org=Bat
                 for result in query:
                     if result not in results[entity] and i is not None:
                         results[entity].append(result.getData())
@@ -168,7 +175,7 @@ def retrieveEntity(entity):
             else:
                 results = results[entity]
                 print(type(result),results)
-                return (render_template("retrieve.j2", entity=entityStr, data=[columns, results]),200)
+                return (render_template("retrieve.j2", entity=entityStr, data=[columns, results],colStrs=colStrs),200)
 
         # Else, for UI/API return 404 error 
         return ("ERROR: malformed request",404)
@@ -189,6 +196,7 @@ def createEntity(entity):
     # Map passed entity to entityObj
     entityStr = entity
     entityObj = mapStringToEntity(entity)
+    colStrs = mapAttributesToString(entity)
 
     # UI - landing page 
     if request.method == "GET":
@@ -247,7 +255,7 @@ def createEntity(entity):
         
         # UI 
         else:
-            return render_template("create.j2", entity=entityStr, data="success")
+            return render_template("create.j2", entity=entityStr, data="success", formData=formData, colStrs=colStrs)
 
 
 # ------- update -------

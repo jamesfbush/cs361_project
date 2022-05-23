@@ -1,10 +1,7 @@
 {% extends "main.j2" %}
-{% block title %}Index{% endblock %}
+{# {% block title %}Index{% endblock %} #}
 {% block head %}
     {{ super() }}
-    <style type="text/css">
-        .important { color: #336699; }
-    </style>
 {% endblock %}
 {% block content %}
     <h1>Retrieve {{ entity }}</h1>
@@ -15,21 +12,31 @@
     <p>Choose "retrieve all" or search by parameters below.</p>
     <div class="form-container">
         <div class="form-group">
+        <h3>Custom search</h3>
             <form action="/{{entity}}/retrieve" method="GET">
 
-                    {% for i in data[0] %}
-                    <div class="form-row">
-                   
-                        <label for "{{i}}>{{i}}</label>
+                {% for i in data[0] %}
+                <div class="form-row">
+                    {% if i == entity[:-1] ~ 'Id' %}
+                        <label for "{{i}}">{{entity[:-1].capitalize() ~ ' ID' }}</label>
                         <br>
                         <input type="text" name="{{i}}">
-                    </div>
-                    {% endfor %}
-                    <div class="form-row">
-                        <input type="submit" class="submit-button" value="Submit">
 
-                    </div>
+                    {% else %}
+                        <label for "{{i}}">{{colStrs[i]}}</label>
+                        <br>
+                        <input type="text" name="{{i}}">
+                    {% endif %}
+
+                </div>
+                {% endfor %}
+                <div class="form-row">
+                    <input type="submit" class="submit-button" value="Submit">
+                </div>
             </form> 
+            <h3>Retrieve all</h3>
+            <button class="submit-button" onclick="window.location.href='/{{entity}}/retrieve?retrieveAll=true';">Retrieve all</button>
+
         </div>
     </div>
     
@@ -42,10 +49,17 @@
             <thead>
                 <tr>
                     {% for i in data[0] %}
-                        <th> {{ i }} </th>
+                        {% if i == entity[:-1] ~ 'Id' %}
+                        <th>{{entity[:-1].capitalize() ~ ' ID' }}</th>
+                        {% else %}
+                        <th> {{ colStrs[i] }} </th>
+                        {% endif %}
                     {% endfor %}
                     <th>Update</th>
                     <th>Delete</th>
+                    {% if entity == "projects" %}
+                    <th>Get report</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -56,8 +70,11 @@
                             <td> {{ i[j] }} </td>
                         {% endfor %}
                         {% set entityId = entity[:-1] ~ 'Id' %}
-                        <td><a href="/{{ entity }}/update?{{entity[:-1]}}Id={{ i[entityId] }}">📝</a></td> {# left off here #}
+                        <td><a href="/{{ entity }}/update?{{entity[:-1]}}Id={{ i[entityId] }}">📝</a></td> 
                         <td><a href="/{{ entity }}/delete?{{entity[:-1]}}Id={{ i[entityId] }}">🗑</a></td>
+                        {% if entity == "projects" %}
+                        <td><a href="/reports?reportEntity=tasks&projectId={{ data[1][0]['projectId'] }}">📊</a></td>                  
+                        {% endif %}
                     </tr>
                 {% endfor %}
             </tbody>
@@ -66,8 +83,17 @@
 
     {# no results #}
     {% elif data[1] | length == 0 %}
-    <p>No results</p>
-    <a href=/{{entity}}/retrieve>Go back to search.</a>
+    <div class="display-container">
+        <div class="display-row">
+            <h3>No results</h3>
+            <p>Your search yielded no results.</p>
+            <p>Click below to revise your search to try again.</p>
+        </div>
+        <div class="display-row">
+            {# <a href=/{{entity}}/retrieve>Go back to search.</a> #}
+            <button class="submit-button" onclick="window.location.href='/{{entity}}/retrieve';">Go back to search</button>
+        </div>
+    </div>
 
     {% endif %}
 

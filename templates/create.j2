@@ -1,5 +1,5 @@
 {% extends "main.j2" %}
-{% block title %}Index{% endblock %}
+{# {% block title %}Index{% endblock %} #}
 {% block head %}
     {{ super() }}
     <style type="text/css">
@@ -12,85 +12,152 @@
 
     {# --- Create success --- #}
     {% if data == "success" %}
-    <p> {{ entity }} successfully created</p>
+    <div class="display-container">
+        <div class="display-row">
+            <h3> {{ entity[:-1].capitalize() }} successfully created</h3>
+        </div>
+        
+
+        <div class="display-row">
+
+            <table>
+                <thead>
+                    <tr>
+                        {% for i in formData %}
+                        <th>{{colStrs[i]}}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        {% for i in formData %}
+                        <td>{{formData[i]}}</td>
+                        {% endfor %}
+
+                    </tr>
+                </tbody>
+            </table>
+            
+          
+        </div>
+        <div class="display-row">
+            <a href=/{{entity}}>Go back to {{entity}}.</a>
+        </div>
+
+    </div>
 
     {% else %}
     {# --- Create new --- #}
 
-    <p><strong>Create new</strong></p>
-    <div>
-    <form action="/{{ entity.lower() }}/create" method="POST">
+    <p>Enter details to create a new {{entity[:-1]}}.</p>
 
-        {# --- Clients --- #}
-        {% if entity == "Clients" %}
-            <label for="clientOrganizationName">Client organization name</label><br><br>
-                <input type="text" name="clientOrganizationName"><br><br>
+    <div class="form-container">
+        <div class="form-group">
+            <form action="/{{ entity.lower() }}/create" method="POST">
 
-            <label for="clientContactFirstName">Client contact first name</label><br><br>
-                <input type="text" name="clientContactFirstName"><br><br>
+                {# --- Clients --- #}
+                {% if entity == "Clients" %}
+                    <div class="form-row">
+                        <label for="clientOrganizationName">Client organization name</label><br>
+                            <input type="text" name="clientOrganizationName"><br>
+                    </div>
+                    <div class="form-row">
+                        <label for="clientContactFirstName">Client contact first name</label><br>
+                            <input type="text" name="clientContactFirstName"><br>
+                    </div>
+                    <div class="form-row">
+                        <label for="clientContactLastName">Client contact last name</label><br>
+                            <input type="text" name="clientContactLastName"><br>
+                    </div>
+                    <div class="form-row">
+                        <label for="clientContactEmail">Client contact email</label><br>
+                            <input type="text" name="clientContactEmail"><br>
+                    </div>
 
-            <label for="clientContactLastName">Client contact last name</label><br><br>
-                <input type="text" name="clientContactLastName"><br><br>
+                {# --- Projects --- #}
+                {% elif entity == "Projects" %}
+                    <div class="form-row">
+                        <label for="clientId">Client ID</label><br>
+                            <input type="text" name="clientId"><br>
+                    </div>
+                    <div class="form-row">
+                        <label for="projectDescription">Project description</label><br>
+                            <input type="text" name="projectDescription"><br>
+                    </div>
+                    <div class="form-row">
+                        <label for="projectBillRate">Project bill rate</label><br>
+                            <input type="number" name="projectBillRate"><br>
+                    </div>
 
-            <label for="clientContactEmail">Client contact email</label><br><br>
-                <input type="text" name="clientContactEmail"><br><br>
+                {# --- Employees --- #}
+                {% elif entity == "Employees" %}
+                    <div class="form-row">
 
+                        <label for="eeFirstName">Employee first name</label><br>
+                            <input type="text" name="eeFirstName"><br>
+                    </div>
+                    <div class="form-row">
 
-        {# --- Projects --- #}
-        {% elif entity == "Projects" %}
-            <label for="clientId">Client ID</label><br><br>
-                <input type="text" name="clientId"><br><br>
+                        <label for="eeLastName">Employee last name</label><br>
+                            <input type="text" name="eeLastName"><br>
+                    </div>
+                    <div class="form-row">
 
-            <label for="projectDescription">Project description</label><br><br>
-                <input type="text" name="projectDescription"><br><br>
+                        <label for="eePosition">Employee position</label><br>
+                            <input type="text" name="eePosition"><br>
+                    </div>
 
-            <label for="projectBillRate">Project bill rate</label><br><br>
-                <input type="number" name="projectBillRate"><br><br>
+                    <div class="form-row">
 
-        {# --- Employees --- #}
-        {% elif entity == "Employees" %}
-            <label for="eeFirstName">Employee first name</label><br><br>
-                <input type="text" name="eeFirstName"><br><br>
+                        <input type="radio" id="current" name="eeStatus" value="True">
+                        <label for="current">Current employee</label><br>
+                    </div>
+                    <div class="form-row">
 
-            <label for="eeLastName">Employee last name</label><br><br>
-                <input type="text" name="eeLastName"><br><br>
-
-            <label for="eePosition">Employee position</label><br><br>
-                <input type="text" name="eePosition"><br><br>
-
-            <input type="radio" id="current" name="eeStatus" value="True">
-            <label for="current">Current employee</label><br>
-
-            <input type="radio" id="former" name="eeStatus" value="False">
-            <label for="former">Former employee</label><br>
+                        <input type="radio" id="former" name="eeStatus" value="False">
+                        <label for="former">Former employee</label><br>
+                    </div>
 
 
 
 
-        {# --- Tasks --- #}
-        {% elif entity == "Tasks" %}
-            <label for="projectId">Project ID</label><br><br>
-                <input type="text" name="projectId"><br><br>
+                {# --- Tasks --- #}
+                {% elif entity == "Tasks" %}
+                     <div class="form-row">
+                   
+                        <label for="projectId">Project ID</label><br>
+                            <input type="text" name="projectId"><br>
+                    </div>
+                     <div class="form-row">
 
-            <label for="taskDescription">Task description</label><br><br>
-                <input type="text" name="taskDescription"><br><br>
+                        <label for="taskDescription">Task description</label><br>
+                            <input type="text" name="taskDescription"><br>
+                    </div>
+                     <div class="form-row">
 
-            <label for="taskDate">Task date</label><br><br>
-                <input type="date" name="taskDate"><br><br>
+                        <label for="taskDate">Task date</label><br>
+                            <input type="date" name="taskDate"><br>
+                    </div>
+                     <div class="form-row">
 
-            <label for="taskTime">Task time</label><br><br>
-                <input type="number" name="taskTime"><br><br>
+                        <label for="taskTime">Task time</label><br>
+                            <input type="number" name="taskTime"><br>
+                    </div>
+                     <div class="form-row">
 
-            <label for="eeId">Employee ID</label><br><br>
-                <input type="number" name="eeId"><br><br>
+                        <label for="eeId">Employee ID</label><br>
+                            <input type="number" name="eeId"><br>
+                    </div>
 
-        {% endif %}
-        <input type="submit" value="Submit">
-    </form> 
+                {% endif %}
+                <div class="form-row">
+                    <input type="submit" class="submit-button" value="Create {{entity[:-1]}}">
+                </div>
+            </form> 
+        </div>
     </div>
     
-    {# success/create conditional #}
-    <p>Good job</p>
+
     {% endif %}
 
 {% endblock %}
