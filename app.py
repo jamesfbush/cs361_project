@@ -137,7 +137,6 @@ def retrieveEntity(entity):
 
         # Extract attributes passed in URL to set filter columns 
         filters = [col for col in request.args.keys() if col in columns and request.args[col] != ""]
-        print("FILTERS",filters)
         if len(filters) > 0:
             # Declare results - a bit different than above
             results = {entity:[]}
@@ -175,7 +174,6 @@ def retrieveEntity(entity):
             # UI 
             else:
                 results = results[entity]
-                print(type(result),results)
                 return (render_template("retrieve.j2", entity=entityStr, data=[columns, results],colStrs=colStrs),200)
 
         # Else, for UI/API return 404 error 
@@ -203,7 +201,6 @@ def createEntity(entity):
     if request.method == "GET":
         # results = Projects.query.all()
         columns = Tasks.__table__.columns.keys() 
-        print("ENTITY",entity)
         return render_template("create.j2", entity=entity.title(), data=[]) #data=[columns, results] 
 
     elif request.method == "POST":
@@ -330,7 +327,6 @@ def deleteEntity(entity):
 
     query = entityObj.query.filter(attr==entityIdVal).first() #entityIdKey==int(entityIdVal)
     deleteRecord = str(query)
-    print("Deleting:",entityIdKey, entityIdVal)
 
     # Delete
     session = getSesssion()
@@ -443,7 +439,6 @@ def reports():
     # Landing page
     if request.method == "GET" and len(request.args) == 0:
         #tables = db.engine.table_names()
-        print("THIS")
         return render_template("reports.j2", entity="reports", reportEntity=None)
 
     # Specific reports
@@ -459,7 +454,6 @@ def reports():
         
         # query db by the intersectId and value to obtain data in json 
         data = requests.get(f'http://localhost:5000/api/{reportEntity}/retrieve?{idKey}={idVal}').json()[reportEntity]
-        print(data)
 
         # convert dict to list of dates and times sorted by date
         taskDatesTimes = sorted({task['taskDate']:task['taskTime'] for task in data}.items(), key=lambda item:item[0])
