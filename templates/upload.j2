@@ -11,20 +11,56 @@
 
     <body>
 
-        <h1>Upload new File</h1>
-          {% if success %}
-          <p>Upload successful: {{ filename }}</p>
-          <p>Checking file format...</p>
+        <h1>Upload a CSV</h1>
+        <div class="form-container">
+            {% if success %}
+            <h3>Upload successful!</h3>
+            <p>You uploaded tasks have been entered into the database as follows:</p>
+            <table>
+                <thead>
+                    <tr>
+                        {% for col in filename['tasks'][0].keys() %}
+                        <th>{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in filename['tasks'] %}
+                    <tr>
+                        {% for val in row.values() %}
+                        <td>{{ val }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-          {% else %}
-          {% if error %}
-          <p><b>Upload error: {{ error }}.</b></p>
-          <p>Please try uploading again.</p>
-          {% endif %}
-            <form method=post enctype=multipart/form-data>
-                <input type=file name=file>
-                <input type=submit value=Upload>
-            </form>
-          {% endif %}
+            <div class="display-row">
+                <button class="submit-button" onclick="window.location.href='/tasks/retrieve';">Search tasks</button>
+                <button class="submit-button" onclick="window.location.href='/reports';">Generate report</button>
+
+            </div>
+
+            {% else %}
+            <div class="form-row">
+                <p>Use the upload feature below to upload a CSV of {{ entity }}.</p>
+                <p>You know you want to...</p>
+                <br>
+                    <form method=post enctype=multipart/form-data>
+                        <input type=file name=file class="file-upload">
+                        <input type=submit value=Upload >
+                    </form>
+            </div>
+            {% if error %}
+            <div class="form-row">
+
+            <p><b>Upload error: {{ error }}.</b></p>
+            <p>Please try uploading again.</p>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
    </body>
 {% endblock %}
+
+

@@ -80,6 +80,7 @@ table {
   padding: 10px;
   border: 1px solid #e2e1e1;
   background-color: #fffefe;
+  text-align: left;
 }
 th {
   border-bottom: 1px solid #e2e1e1;
@@ -199,3 +200,4 @@ tr:nth-child(even) {
   color: white;
   transition-duration: .5s;
 }
+
