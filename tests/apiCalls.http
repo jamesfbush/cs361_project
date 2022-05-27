@@ -18,14 +18,14 @@ GET http://localhost:5000/api/tasks/retrieve?retrieveAll
 GET http://localhost:5000/api/employees/retrieve?retrieveAll
 
 
-### Retrieve by search parameters - tasks - eeid=1, taskId=2
-GET http://localhost:5000/api/tasks/retrieve?eeId=1&taskId=2
+### Retrieve by search parameters - tasks - employeeId=1, taskId=2
+GET http://localhost:5000/api/tasks/retrieve?employeeId=1&taskId=2
 
 ### Projects - projectId=1, clientid=3
 GET http://localhost:5000/api/projects/retrieve?projectId=1&clientId=3
 
-### Employees - eeId=2, eeFirstName='Brandi'
-GET http://localhost:5000/api/employees/retrieve?eeId=2&eeFirstName=Brandi
+### Employees - employeeId=2, eeFirstName='Brandi'
+GET http://localhost:5000/api/employees/retrieve?employeeId=2&eeFirstName=Brandi
 
 ### Partial search term - Tasks - taskId=1, taskDescription=ee
 GET http://localhost:5000/api/tasks/retrieve?taskId=1&taskDescription=ee
@@ -76,7 +76,7 @@ content-type: application/json
     "taskDescription":"jumping",
     "taskDate":"2020-01-03",
     "taskTime":2.3,
-    "eeId":2
+    "employeeId":2
 }
 
 ### Find the Task
@@ -87,10 +87,10 @@ POST http://localhost:5000/api/employees/create HTTP/1.1
 content-type: application/json
 
 {
-    "eeFirstName":"Kenneth",
-    "eeLastName":"Lay",
-    "eePosition":"CEO",
-    "eeStatus":0
+    "employeeFirstName":"Kenneth",
+    "employeeLastName":"Lay",
+    "employeePosition":"CEO",
+    "employeeStatus":"true"
 }
 
 ### Find the Employee
@@ -125,7 +125,7 @@ content-type: application/json
     "taskDescription":"Jumping up and down",
     "taskDate": "2022-01-03",
     "taskTime":0.3,
-    "eeId":2
+    "employeeId":2
 }
 ###
 POST http://localhost:5000/api/tasks/create HTTP/1.1
@@ -136,7 +136,7 @@ content-type: application/json
     "taskDescription":"Flapping arms all around",
     "taskDate": "2022-01-04",
     "taskTime":2.3,
-    "eeId":2
+    "employeeId":2
 }
 ###
 POST http://localhost:5000/api/tasks/create HTTP/1.1
@@ -147,7 +147,7 @@ content-type: application/json
     "taskDescription":"Hopping to and fro",
     "taskDate": "2022-01-05",
     "taskTime":2.3,
-    "eeId":2
+    "employeeId":2
 }
 ###
 POST http://localhost:5000/api/tasks/create HTTP/1.1
@@ -158,7 +158,7 @@ content-type: application/json
     "taskDescription":"Humming here we go",
     "taskDate": "2022-01-06",
     "taskTime":1.0,
-    "eeId":2
+    "employeeId":2
 }
 ###
 POST http://localhost:5000/api/tasks/create HTTP/1.1
@@ -169,6 +169,6 @@ content-type: application/json
     "taskDescription":"Rolling in the grass",
     "taskDate": "2022-01-07",
     "taskTime":4.6,
-    "eeId":2
+    "employeeId":2
 }
 

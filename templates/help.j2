@@ -8,8 +8,60 @@
 {% endblock %}
 {% block content %}
     <h1>Help</h1>
-    <p>
-      Review topics below for more information.
-    </p>
+    <div class="display-container">
+        <div class="display-row">
+            <h3>Creating</h3>
+                <p>To create a client, project, task, or employee, follow these steps:</p>
+                <ol>
+                    <li>Click on the entity link in the navbar or navigate <a href="/">home</a> and click on one of the links in the Clients, Projects, or Tasks boxes.</li>
+                    <li>On the chosen entity page, click the "Create" box. 
+                    <li>A form with several fields will appear. Required fields are marked with an asterisk(*).</li>
+                    <li>Fill out the form, then click "Create" button and you're done.</li>
+                </ol>
+                <p>You'll recieve a confirmation that your new entity has been created.</p>
+
+        </div>
+                
+        <div class="display-row">
+            <h3>Searching</h3>
+                <p>To search for a client, project, task, or employee, follow these steps:</p>
+                <ol>
+                    <li>Navigate to the entity page and click "Search" or "Retrieve All".</li>
+                    <li>"Search" will take you to a page where you can enter search parameters.</li>
+                    <li>"Retrieve All", the search will return all entities of that type. </li>
+                    <li>From the results page, you can choose to Update or Delete any of the entities in the results.</li>
+                    <li>If there are no results from your custom search, a page will prompt that there are no results.</li>
+                </ol>
+
+        </div>
+        <div class="display-row">
+            <h3>Updating</h3>
+                <p>To update a client, project, task, or employee:</p>
+                <ol>
+                    <li>Search for the entity by navigating to its main page and click "Search"</li>
+                    <li>After you've located the entity in the search results, click the "Update" icon (📝).</li>
+                    <li>After clicking "Update", you will see a form where the entity details can be edited.</li>
+                    <li>Once you've changed what you need to change, click "Update" button at the bottom of the form.</li>
+                </ol>
+                <p>You will see a confimation page once the update is complete.</p>
+
+
+        </div>
+        <div class="display-row">
+            <h3>Deleting</h3>
+                <p>To delete a client, project, task, or employee:</p>
+                <ol>
+                    <li>Search for the entity by navigating to the main entity page and click "Search"</li>
+                    <li>After you've located the entity in the search results, click the "Delete" icon (🗑).</li>
+                    <li>After clicking "Delete", the entity will be permanently deleted from the database.</li>
+                    <li>You'll recieve a confirmation that the entity has been delted.</li>
+                </ol>
+                <p>Note: If a client is deleted, all associated projects and tasks will be deleted.</p>
+                <p>If a project is deleted, all associated tasks will be deleted.</p>
+
+        </div>
+    </div>
+
+
 
 {% endblock %}

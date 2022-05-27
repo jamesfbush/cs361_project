@@ -20,7 +20,7 @@ def mySqlConnection():
     # MySQL
     app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql://{user}:{passwd}@{host}/{db}'
 
-def sqlLiteConncetion():
+def sqlLiteConnection():
     """
     Create SQLite connection with db in root directory. 
     """
@@ -28,7 +28,7 @@ def sqlLiteConncetion():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database/timeTrack.db'
 
 # Initiate connection, initial config
-sqlLiteConncetion()
+sqlLiteConnection()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 

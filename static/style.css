@@ -5,17 +5,19 @@ h1 {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-
 h2, h3 {
   color: #56565A;
   font-family: Arial, Helvetica, sans-serif;
 }
 
-
 a {
   color: #FF6201
 }
 
+hr {
+  border: 0.5px solid #d6d6d6;
+  max-width: 500px;
+}
 
 div.content {
   text-align: center;
@@ -35,12 +37,12 @@ ul.topNavbar {
   background-color: rgb(245, 255, 106); /* rgb(223, 255, 0); #DCEB23*/
 }
 
-li {
+ul > li {
   float: inline-start;
   /* border-right: 2px solid rgb(231, 240, 96); */
 }
 
-li a {
+ul > li a {
   display: block;
   color: rgb(99, 97, 97);
   font-family: Arial, Helvetica, sans-serif;
@@ -99,10 +101,10 @@ tr:nth-child(even) {
   padding: 15px;
 }
 .display-row {
-  padding: 10px;
+  padding: 5px;
 }
 
-.flex-container {
+.option-box {
   width: 90%;
   margin: 0 auto;
   display: flex;
@@ -113,7 +115,7 @@ tr:nth-child(even) {
   background-color: rgb(225, 225, 225);
 }
 
-.flex-container > div {
+.option-box > div {
   width: 275px;
   height: 171.875px;
   text-align: center;
@@ -123,7 +125,7 @@ tr:nth-child(even) {
   border-radius: 5px;
 }
 
-.optionsContainer {
+.options-container {
   text-align: center;
   max-width: 1700px;
   background-color: #fffefe;

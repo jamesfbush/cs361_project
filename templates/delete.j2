@@ -9,16 +9,23 @@
 {% block content %}
     <h1>Delete {{ dbEntity }}</h1>
 
-    <div class="form-container">
-        <div class="form-group">
-            {% if deleteRecord %}
+    <div class="display-container">
+    
+        
+        {% if deleteRecord %}
+        <div class="display-row">
             <h3>{{ entity.capitalize()[:-1] }} successfully deleted.</h3>
             <p></b> {{ deleteRecord }} </b></p>
-            {% else %}
+        </div>
+        <div class="display-row">
+            <button class="submit-button" onclick="window.location.href='/{{entity}}/retrieve';">Go back to search</button>
+        </div>
+
+        {# NOTE: Currently moth-balled #}
+        {% else %}
             <p>Delete {{ entity.capitalize() }}?</p>
 
-            {% endif %}
-        </div>
+        {% endif %}
     </div>
 
 

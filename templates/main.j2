@@ -59,10 +59,10 @@
 
         {% if entity.title() == "Home" %}
         <p>Welcome to TimeTrack.</p>
-        <div class="optionsContainer">
+        <div class="options-container">
             <h3>I've done this before</h3>
                 <p>Please select from the options in the navigation bar above to get started.</p>
-                <div class="flex-container">
+                <div class="option-box">
                     <div>
                         {# https://icons.getbootstrap.com/icons/file-earmark-person/ #}
                         <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="#FF6201" class="bi bi-file-earmark-person" viewBox="0 0 16 16">
@@ -107,10 +107,10 @@
                 </div> 
         </div>
         <br>
-        <div class="optionsContainer">
+        <div class="options-container">
             <h3>I'm new to this</h3>
                 <p>First time? Maximize your productivity by navigating to the Help and FAQ. 
-                <div class="flex-container">
+                <div class="option-box">
                     <div>
                         {# https://icons.getbootstrap.com/icons/life-preserver/ #}
                         <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="grey" class="bi bi-life-preserver" viewBox="0 0 16 16">
@@ -138,10 +138,10 @@
 
     {% else %}
     <p>You're going to {{ operation }} a {{ entity }} </p>
-        <div class="optionsContainer">
+        <div class="options-container">
             <h3>Choose your choice</h3>
                 <p>Would you like to search, create, or update {{ entity }}?.</p>
-                <div class="flex-container">
+                <div class="option-box">
                     <div>
                     {# https://icons.getbootstrap.com/icons/search/ #}
                     <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">

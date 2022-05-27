@@ -73,7 +73,7 @@
                         <td><a href="/{{ entity }}/update?{{entity[:-1]}}Id={{ i[entityId] }}">📝</a></td> 
                         <td><a href="/{{ entity }}/delete?{{entity[:-1]}}Id={{ i[entityId] }}">🗑</a></td>
                         {% if entity == "projects" %}
-                        <td><a href="/reports?reportEntity=tasks&projectId={{ data[1][0]['projectId'] }}">📊</a></td>                  
+                        <td><a href="/reports?reportEntity=tasks&projectId={{ i['projectId'] }}">📊</a></td>                  
                         {% endif %}
                     </tr>
                 {% endfor %}

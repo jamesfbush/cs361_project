@@ -6,6 +6,8 @@ from datetime import datetime as dt
 from model import Clients, Projects, Employees, Tasks, prepopulateDatabase, getSesssion
 import requests 
 import json 
+import time as tm
+
 
 # Graphing 
 # import plotly.express as px
@@ -14,33 +16,34 @@ import io
 import base64
 
 # Handling report image file 
-from chart_ms import chart
-import shutil
+# from chart_ms import chart
+import subprocess
 from os.path import exists
-import time as tm
 
+# Uploads
+from upload import allowed_file, load_csv
+import csv
+from werkzeug.utils import secure_filename
 
 # Flask object
 app = Flask(__name__)
 
-# Configure database 
+# Configure, delcare, and prepopulate database 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database/timeTrack.db' # SQLite
 # app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql://{user}:{passwd}@{host}/{db}' # MySQL
-
-# Other db config
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Declare db
 db = SQLAlchemy(app)
-
-# Set up dummy data 
 prepopulateDatabase()
 
-# Declare host name 
+# Declare host name and port
 host = 'localhost'
-
-# Declare port 
 port = 5000
+
+# Configure upload folder and allowed extensions
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'csv'} #'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 #16 kb
 
 
 # ---------- Helpers ----------
@@ -56,8 +59,7 @@ def mapStringToEntity(entity):
     return entityDict[entity]
 
 def mapAttributesToString(entity,column=None):
-    """
-    Map entity and column strings to UI-friendly column descriptions. 
+    """Map entity and column strings to UI-friendly column descriptions. 
 
     Keyword arguments: 
     entity -- string representation of db object, e.g., "clients", "projects"
@@ -89,6 +91,11 @@ def mapAttributesToString(entity,column=None):
         return stringDict[entity][column]
     return stringDict[entity]
 
+def allowed_file(filename):
+	"""
+	Return True if file within allowed extensions, False if not.
+	"""
+	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # ---------- UI - Main ---------- 
 @app.route('/',methods=["GET"])
@@ -113,7 +120,6 @@ def retrieveEntity(entity):
     entityStr = entity
     columns = entityObj.__table__.columns.keys()
     colStrs = mapAttributesToString(entity) #dict - keys are col names and vals are col descriptions
-
     
     # UI - Landing page 
     if len(request.args) == 0 and "/api/" not in str(request.url_rule):  
@@ -140,7 +146,6 @@ def retrieveEntity(entity):
         if len(filters) > 0:
             # Declare results - a bit different than above
             results = {entity:[]}
-            
             # Query db based on attributes/values in URL
             for i in filters:
                 # Attribute passed in URL 
@@ -158,9 +163,9 @@ def retrieveEntity(entity):
                     if result not in results[entity] and i is not None:
                         results[entity].append(result.getData())
 
-            # No results, return 204 Not Found 
+            # No results 
             if len(results[entity]) == 0:
-                # API
+                # API - return 204 Not Found
                 if "/api/" in str(request.url_rule):
                     return (jsonify(results),204)
                 # UI
@@ -183,10 +188,8 @@ def retrieveEntity(entity):
 # ------- UI / API create -------
 @app.route('/api/<entity>/create',methods=["POST"])
 @app.route('/<entity>/create',methods=["GET", "POST"])
-
 def createEntity(entity):
-    """
-    Create an instance of a database entity. 
+    """Create an instance of a database entity. 
 
     Keyword arguments: 
     entity -- string, passed through URL, e.g., "Clients", "Tasks", etc 
@@ -203,10 +206,9 @@ def createEntity(entity):
         columns = Tasks.__table__.columns.keys() 
         return render_template("create.j2", entity=entity.title(), data=[]) #data=[columns, results] 
 
+    # UI/API - create entity 
     elif request.method == "POST":
-
-        # UI/API - Otherwise, create new entity 
-        # # Get db session 
+        # Get db session 
         session = getSesssion()
 
         # UI / API - extract form (UI) or json (API) data 
@@ -214,7 +216,6 @@ def createEntity(entity):
             formData = request.json
         else:
             formData = request.form 
-
 
         # Declare the new entityObj to add 
         # https://flask-sqlalchemy.palletsprojects.com/en/2.x/queries/#inserting-records
@@ -237,12 +238,16 @@ def createEntity(entity):
                                     employeeId=formData['employeeId'] 
                                 )
         elif entity == "employees":
+            # Convert form data (string) to Python boolean 
+            if formData['employeeStatus'].lower() == "true":
+                employeeStatus = True
+            elif formData['employeeStatus'].lower() == "false":
+                employeeStatus = False
             newEntity = entityObj(  employeeFirstName=formData['employeeFirstName'],
                                     employeeLastName=formData['employeeLastName'],
                                     employeePosition=formData['employeePosition'],
-                                    employeeStatus=formData['employeeStatus']
+                                    employeeStatus=employeeStatus
                                 )
-
         # add and commit the change, return a success code 
         session.add(newEntity)
         session.commit()
@@ -250,7 +255,6 @@ def createEntity(entity):
         # API 
         if "/api/" in str(request.url_rule):
             return (jsonify({entity:[request.json]}),201)
-        
         # UI 
         else:
             return render_template("create.j2", entity=entityStr, data="success", formData=formData, colStrs=colStrs)
@@ -301,7 +305,6 @@ def updateEntity(entity):
     if request.method == "POST":
         return render_template("update.j2",entity=entity, updated=True, updateRecord=updateRecord)
     return (jsonify(query),200)
-
         
 
 # ------- delete -------
@@ -313,29 +316,23 @@ def deleteEntity(entity):
     if request.method == "GET":
         render_template("delete.j2", entity=entity)
 
-    # Delete the entity 
-
-
-    # Map passed entity to a db entity 
+    # UI/API - Declare key, val, and map passed entity to a db entity 
     entityObj = mapStringToEntity(entity)
-
     entityIdKey = list(request.args.keys())[0]
-
     attr = getattr(entityObj,list(request.args.keys())[0])
-
     entityIdVal = request.args[entityIdKey]
 
+    # Query the entity, copy the deleted record for UI display, and delete it
     query = entityObj.query.filter(attr==entityIdVal).first() #entityIdKey==int(entityIdVal)
     deleteRecord = str(query)
-
-    # Delete
     session = getSesssion()
     session.delete(query)
     session.commit()
 
+    # API
     if "/api/" in str(request.url_rule):
-
         return (jsonify("deleted"),200)
+    # UI
     else:
         return render_template("delete.j2",entity=entity, deleteRecord=deleteRecord)
 
@@ -399,33 +396,33 @@ def serveChartInMemory(graphingPayload):
     return f'<img src="data:image/png;base64,{plot_url}">'
 
 def getChartFromMS(graphingPayload):
+    """
+    Create graphingPayload from passed dict, save to json, obtain
+    jpeg image from chart_ms microservice, return link to image 
+    to serve in report 
 
-         # Save graphingPayload to json to microservice directory  
-        with open('static/chart.json', 'w') as outfile:
-            json.dump(graphingPayload, outfile)
+    Keyword arguments: 
+    graphingPayload -- a dict with parameters to pass to chart_ms as json
+    """
 
-        # Declare new graphFileName
-        graphFileName = f"{graphingPayload['export_location']}.{graphingPayload['export_type']}"
+    # Save graphingPayload to json to microservice directory  
+    with open('static/chart.json', 'w') as outfile:
+        json.dump(graphingPayload, outfile)
 
-        # Declare new img element with src path for image 
-        img = f'<img src="static/{graphFileName}">'
+    # Declare new graphFileName
+    graphFileName = f"{graphingPayload['export_location']}.{graphingPayload['export_type']}"
 
-        # # Check for presence of image from microservice 
-        file_exists = False 
-        count = 1
+    # Declare string of new html img element with src path for image 
+    img = f'<img src="{graphFileName}">'
 
-        sourcePath = f"static/{graphFileName}"
+    sourcePath = f"{graphFileName}"
 
-        while file_exists is not True: 
-            file_exists = exists(sourcePath)
-            print(file_exists, sourcePath)
-            tm.sleep(0.5)
-            count += 1
-            print("Checking for file...",count)
+    # Call the graphing microservice as a separate subprocess 
+    print('\n\033[2;1;32m **Calling chart_ms as separate subprocess, chart_ms.py...** \033[0;0m\n')
+    subprocess.run("python3 chart_ms.py",shell=True)
+    print('\033[2;1;32m **Call to chart_ms complete...** \033[0;0m\n')
 
-        # If exists, move to static director to serve in report template
-        # shutil.move(sourcePath, img)
-        return img
+    return img
 
 
 # ---------- UI - Reports route ----------
@@ -469,7 +466,7 @@ def reports():
                             "x_axis": x, 
                             "y_axis": y,
                             "export_type": "jpeg",
-                            "export_location": "report",
+                            "export_location": "static/report",
                             "graph_title": "report",
                             "x_axis_label": "Date",
                             "y_axis_label": "Hours"
@@ -511,7 +508,61 @@ def timeDeltaAPI():
                 '.../api/timeDelta?startTime=1577865600&endTime=1641121445'<br><br>\
                     where startTime and endTime values are Unix timestamps.",404)
 
+# ---------- Upload --------------
+@app.route('/upload', methods = ['GET', 'POST'])
+def upload_file(entity="upload"):
+    """
+    Render landing page with upload button for GET.
+    Once file submitted with POST, check file validity;
+    return error message if invalid file.
+    Save valid file and return success message, if success. 
+    """
+    entity = "upload"
+    if request.method == 'GET':
+        return render_template('upload.j2', entity=entity)
+    elif request.method == 'POST':
+        # Check post request has the file part
+        if 'file' not in request.files:
+            error = "no file part"
+            return render_template("upload.j2", entity=entity, error=error) 
+        file = request.files['file']
+        # No file submitted 
+        if file.filename == '':
+            error = 'No selected file'
+            return render_template("upload.j2", entity=entity, error=error)
+        # Impermissible format 
+        if not allowed_file(file.filename):
+            error ="Error: not a .csv file."
+            return render_template("upload.j2", entity=entity, error=error) 
+        # Format OK, save, render upload success
+        if file and allowed_file(file.filename):
+            # Ensure secure file name used
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+			
+            #Load csv
+            csv = load_csv(filename)
+            if csv is not False:
 
+                # Attempt process 
+                #print('Entering data...')
+                for i in csv['tasks']:
+                #    apiCall = f"{host}:{port}/api/tasks/create?"
+                #    for key, val in i.items():
+                #        apiCall += f'{key}={val}&'
+                #    print(apiCall)
+                
+
+                    requests.post(f'http://{host}:{port}/api/tasks/create?', json=i)
+
+
+
+
+                return render_template("upload.j2", entity=entity, success=True, filename=csv)
+            else:
+                error = "CSV not in correct format"
+                return render_template("upload.j2", entity=entity, error=error) 
+	
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', port))

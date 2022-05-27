@@ -3,23 +3,19 @@ import plotly.express as px
 from os.path import exists
 import time
 
-# Modified, will allow in-memory generation of images 
 
-def chart(graphingPayload=None): # 220523 JFB - added graphingPayload
+def chart():
 
-    if graphingPayload is not None: # 220523 JFB 
-        data = graphingPayload # 220523 JFB 
-    else: # 220523 JFB 
-        start_time = time.time()
+    start_time = time.time()
 
-        while not exists('chart.json'):
-            print('Waiting for file...')
-            print(f'{round(time.time() - start_time)} seconds since process began.\n')
-            time.sleep(3)
+    while not exists('static/chart.json'): # 220524 JB
+        print('Waiting for file...')
+        print(f'{round(time.time() - start_time)} seconds since process began.\n')
+        time.sleep(3) 
 
-        with open('chart.json', 'r') as f:
-            data = json.load(f)
-            print('File Opened Successfully!')
+    with open('static/chart.json', 'r') as f: # 220524 JB
+        data = json.load(f)
+        print('File Opened Successfully!')
 
     # Optionals
     if 'group' in  data:
@@ -64,10 +60,7 @@ def chart(graphingPayload=None): # 220523 JFB - added graphingPayload
             ,title= graph_title
             ,labels={'x': x_axis_label, 'y':y_axis_label, 'color':group_label}
             )
-        if graphingPayload is not None: # 220523 JFB 
-            return fig # 220523 JFB 
-        else:
-            fig.write_image(export_location + '.' + data['export_type'])
+        fig.write_image(export_location + '.' + data['export_type'])
         print('Line graph exported successfully!\n')
     
     # Bar Chart
@@ -83,11 +76,8 @@ def chart(graphingPayload=None): # 220523 JFB - added graphingPayload
             ,title= graph_title
             ,labels={'x': x_axis_label, 'y':y_axis_label, 'color':group_label}
             )
-        if graphingPayload is not None: # 220523 JFB 
-            return fig # 220523 JFB 
-        else:
-            fig.write_image(export_location + '.' + data['export_type'])
-        print('Line graph exported successfully!\n')
+        fig.write_image(export_location + '.' + data['export_type'])
+        print('Bar graph exported successfully!\n')
 
     # Scatter Chart
     if data['graph_type'] == 'scatter':
@@ -101,11 +91,7 @@ def chart(graphingPayload=None): # 220523 JFB - added graphingPayload
             ,title= graph_title
             ,labels={'x': x_axis_label, 'y':y_axis_label, 'color':group_label}
             )
-        if graphingPayload is not None: # 220523 JFB 
-            return fig # 220523 JFB 
-        else:
-            fig.write_image(export_location + '.' + data['export_type'])
-        print('Line graph exported successfully!\n')
+        fig.write_image(export_location + '.' + data['export_type'])
+        print('Scatter graph exported successfully!\n')
 
-if __name__ == "__main__": #220523 JFB
-    chart()
+chart()

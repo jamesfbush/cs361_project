@@ -10,12 +10,21 @@
     <h1>Update {{ dbEntity }}</h1>
 
     {% if updated %}
-    <h3> Update successful </h3>
-    {% for i in updateRecord.keys() %}
-    <p><b>{{ i }}:</b> </p>
-    <p>{{ updateRecord[i] }}</p>
-    {% endfor %}
-    <a href=/{{entity}}/retrieve>Go back to search.</a>
+    <div class="display-container">
+        <h3> Update successful </h3>
+        <div style="padding: 5px">
+            {% for i in updateRecord.keys() %}
+            <div class="display-row">
+                <p><b>{{ i }}:</b> {{ updateRecord[i] }}</p>
+            </div>
+            {% endfor %}
+            <br>
+            <div class="display-row">
+                <button class="submit-button" onclick="window.location.href='/{{entity}}/retrieve';">Go back to search</button>
+            </div>
+        </div>
+    </div>
+
     {% else %}
 
     <div class="form-container">
