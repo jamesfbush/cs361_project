@@ -1,29 +1,18 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response, redirect, url_for
+from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy 
 from dotenv import load_dotenv, find_dotenv
-import os
-from datetime import datetime as dt
 from model import Clients, Projects, Employees, Tasks, prepopulateDatabase, getSesssion
+from upload import allowed_file, load_csv
+from datetime import datetime as dt
+import os
+import csv
 import requests 
+import subprocess # Call to chart_ms
 import json 
 import time as tm
 
-
-# Graphing 
-# import plotly.express as px
-# import plotly.graph_objects as go
-import io
-import base64
-
-# Handling report image file 
-# from chart_ms import chart
-import subprocess
-from os.path import exists
-
-# Uploads
-from upload import allowed_file, load_csv
-import csv
-from werkzeug.utils import secure_filename
+# ---------- CONFIG ----------
 
 # Flask object
 app = Flask(__name__)
@@ -36,20 +25,23 @@ db = SQLAlchemy(app)
 prepopulateDatabase()
 
 # Declare host name and port
-host = 'localhost'
+host = '0.0.0.0'#'localhost'
 port = 5000
 
-# Configure upload folder and allowed extensions
+# For uploads, configure folder, allowed filetype, and max size
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'csv'} #'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 #16 kb
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 #max size is 16 kb
 
 
-# ---------- Helpers ----------
+# ---------- HELPERS ----------
 def mapStringToEntity(entity):
-    """
+    """For CRUD workflow.
     Map passed entity to an object in db model.
+
+    Keyword arguments:
+    entity -- string representing entity in database
     """
     entityDict = {  'tasks':Tasks, 
                     'projects':Projects, 
@@ -58,8 +50,10 @@ def mapStringToEntity(entity):
                 }
     return entityDict[entity]
 
+
 def mapAttributesToString(entity,column=None):
-    """Map entity and column strings to UI-friendly column descriptions. 
+    """For CRUD workflow. 
+    Map entity and column strings to UI-friendly column descriptions. 
 
     Keyword arguments: 
     entity -- string representation of db object, e.g., "clients", "projects"
@@ -91,15 +85,51 @@ def mapAttributesToString(entity,column=None):
         return stringDict[entity][column]
     return stringDict[entity]
 
+
 def allowed_file(filename):
-	"""
-	Return True if file within allowed extensions, False if not.
+	"""For CSV upload workflow. 
+    Return True if file within allowed extensions, False if not.
 	"""
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def getChartFromMS(graphingPayload):
+    """For reports/graphing workflow. 
+    Create graphingPayload from passed dict, save to json, obtain
+    jpeg image from chart_ms microservice, return link to image 
+    to serve in report 
+
+    Keyword arguments: 
+    graphingPayload -- a dict with parameters to pass to chart_ms as json
+    """
+
+    # Save graphingPayload to json to microservice directory  
+    with open('static/chart.json', 'w') as outfile:
+        json.dump(graphingPayload, outfile)
+
+    # Declare new graphFileName
+    graphFileName = f"{graphingPayload['export_location']}.{graphingPayload['export_type']}"
+
+    # Declare string of new html img element with src path for image 
+    img = f'<img src="{graphFileName}">'
+
+    sourcePath = f"{graphFileName}"
+
+    # Call the graphing microservice as a separate subprocess 
+    print('\n\033[2;1;32m **Calling chart_ms as separate subprocess, chart_ms.py...** \033[0;0m\n')
+    subprocess.run("python3 chart_ms.py",shell=True)
+    print('\033[2;1;32m **Call to chart_ms complete...** \033[0;0m\n')
+
+    return img
+
+
+# ---------- ROUTES ---------- 
+
 
 # ---------- UI - Main ---------- 
 @app.route('/',methods=["GET"])
 def home():
+    """Render home page.
+    """
     if request.method == "GET": 
             return render_template("main.j2",entity="Home") 
 
@@ -107,6 +137,11 @@ def home():
 # ---------- UI - Entity landing ---------- 
 @app.route('/<entity>',methods=["GET"])
 def entityLanding(entity):
+    """Render individual entity landing pages.
+
+    Keyword arguments: 
+    entity -- string, passed through URL, e.g., "Clients", "Tasks", etc.
+    """
     return render_template("main.j2", entity=entity.title())
 
 
@@ -114,6 +149,11 @@ def entityLanding(entity):
 @app.route('/api/<entity>/retrieve',methods=["GET"])
 @app.route('/<entity>/retrieve',methods=["GET"])
 def retrieveEntity(entity):
+    """Perform retrieval for UI or API based on search parameters or 'retrieve all'.
+    
+    Keyword arguments: 
+    entity -- string, passed through URL, e.g., "Clients", "Tasks", etc.
+    """
 
     # map passed entity to db object 
     entityObj = mapStringToEntity(entity) 
@@ -192,7 +232,7 @@ def createEntity(entity):
     """Create an instance of a database entity. 
 
     Keyword arguments: 
-    entity -- string, passed through URL, e.g., "Clients", "Tasks", etc 
+    entity -- string, passed through URL, e.g., "Clients", "Tasks", etc.
     """
 
     # Map passed entity to entityObj
@@ -264,6 +304,11 @@ def createEntity(entity):
 @app.route('/api/<entity>/update',methods=["PUT"])
 @app.route('/<entity>/update',methods=["GET", "POST"])
 def updateEntity(entity):
+    """Update an instance of a database entity. 
+
+    Keyword arguments: 
+    entity -- string, passed through URL, e.g., "Clients", "Tasks", etc.
+    """
 
     # get entity db object and session
     entityObj = mapStringToEntity(entity) 
@@ -311,6 +356,11 @@ def updateEntity(entity):
 @app.route('/<entity>/delete',methods=["GET","POST"])
 @app.route('/api/<entity>/delete',methods=["DELETE"])
 def deleteEntity(entity):
+    """Delete an instance of a database entity. 
+
+    Keyword arguments: 
+    entity -- string, passed through URL, e.g., "Clients", "Tasks", etc.
+    """
 
     # UI - generate landing page with confirmation prompt 
     if request.method == "GET":
@@ -340,6 +390,7 @@ def deleteEntity(entity):
 # ---------- UI - Help ---------- 
 @app.route('/help',methods=["GET"])
 def appHelp():
+    """Render help section page."""
     if request.method == "GET": 
             return render_template("help.j2", entity="Help")
 
@@ -347,85 +398,12 @@ def appHelp():
 # ---------- UI - FAQ ---------- 
 @app.route('/faq',methods=["GET"])
 def appFaq():
+    """Render FAQ section page."""
     if request.method == "GET": 
             return render_template("faq.j2", entity="Help")
 
 
-
-
 # ---------- UI - Reports ----------
-
-
-# ---------- Report helpers ----------
-def serveChartInMemory(graphingPayload):
-    # as opposed to creating JPEG each time, can do one in memory
-    # and server per https://stackoverflow.com/questions/25140826/generate-image-embed-in-flask-with-a-data-uri 
-    # another example: https://stackoverflow.com/questions/7877282/how-to-send-image-generated-by-pil-to-browser 
-    """
-    Take image plot (matplotlib currently), return HTML img element with in-memory image
-
-    Keyword arguments:
-    plt -- the graph object
-
-    Sourced from: 
-    https://blog.furas.pl/python-flask-how-to-use-bytesio-in-flask-to-display-matplotlib-image-without-saving-in-file-gb.html
-   
-    graphingPayload = { "graph_type": "bar",
-                    "graph_height": 400, 
-                    "graph_width": 600, 
-                    "x_axis": x, 
-                    "y_axis": y,
-                    "export_type": "jpeg",
-                    "export_location": "report.jpeg",
-                    "graph_title": "report",
-                    "x_axis_label": "Date",
-                    "y_axis_label": "Hours"
-                    }
-    """
-    # Option to run natively  
-    # fig = px.bar(   x=graphingPayload['x_axis'], 
-    #                 y=graphingPayload['y_axis'], 
-    #                 title=graphingPayload['graph_title']
-    #             )
-
-    fig = chart(graphingPayload)
-    img = io.BytesIO()
-    fig.write_image(img, format=graphingPayload["export_type"])
-    img.seek(0)
-    plot_url = base64.b64encode(img.getvalue()).decode()
-    return f'<img src="data:image/png;base64,{plot_url}">'
-
-def getChartFromMS(graphingPayload):
-    """
-    Create graphingPayload from passed dict, save to json, obtain
-    jpeg image from chart_ms microservice, return link to image 
-    to serve in report 
-
-    Keyword arguments: 
-    graphingPayload -- a dict with parameters to pass to chart_ms as json
-    """
-
-    # Save graphingPayload to json to microservice directory  
-    with open('static/chart.json', 'w') as outfile:
-        json.dump(graphingPayload, outfile)
-
-    # Declare new graphFileName
-    graphFileName = f"{graphingPayload['export_location']}.{graphingPayload['export_type']}"
-
-    # Declare string of new html img element with src path for image 
-    img = f'<img src="{graphFileName}">'
-
-    sourcePath = f"{graphFileName}"
-
-    # Call the graphing microservice as a separate subprocess 
-    print('\n\033[2;1;32m **Calling chart_ms as separate subprocess, chart_ms.py...** \033[0;0m\n')
-    subprocess.run("python3 chart_ms.py",shell=True)
-    print('\033[2;1;32m **Call to chart_ms complete...** \033[0;0m\n')
-
-    return img
-
-
-# ---------- UI - Reports route ----------
 @app.route('/reports',methods=["GET"])
 def reports():
     # Notes
@@ -469,7 +447,7 @@ def reports():
                             "export_location": "static/report",
                             "graph_title": "report",
                             "x_axis_label": "Date",
-                            "y_axis_label": "Hours"
+                            "y_axis_label": "Hours",
                             }
 
         # Call graphing service to generate image in-memory                
@@ -545,24 +523,22 @@ def upload_file(entity="upload"):
             if csv is not False:
 
                 # Attempt process 
-                #print('Entering data...')
                 for i in csv['tasks']:
-                #    apiCall = f"{host}:{port}/api/tasks/create?"
-                #    for key, val in i.items():
-                #        apiCall += f'{key}={val}&'
-                #    print(apiCall)
-                
 
                     requests.post(f'http://{host}:{port}/api/tasks/create?', json=i)
-
-
-
 
                 return render_template("upload.j2", entity=entity, success=True, filename=csv)
             else:
                 error = "CSV not in correct format"
                 return render_template("upload.j2", entity=entity, error=error) 
-	
+
+# Set darkMode
+@app.route("/set")
+@app.route("/set/<theme>")
+def set_theme(theme="light"):
+    res = make_response(redirect("/")) #url_for("entityLanding")))
+    res.set_cookie("theme", theme)
+    return res
 
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', port))

@@ -43,6 +43,7 @@
 
             {% else %}
             <div class="form-row">
+                <h3>Upload a CSV to the databse</h3>
                 <p>Use the upload feature below to upload a CSV of {{ entity }}.</p>
                 <p>You know you want to...</p>
                 <br>
@@ -53,9 +54,8 @@
             </div>
             {% if error %}
             <div class="form-row">
-
-            <p><b>Upload error: {{ error }}.</b></p>
-            <p>Please try uploading again.</p>
+                <p class="error-msg"><b>Upload error: {{ error }}.</b></p>
+                <p>Please try uploading again.</p>
             </div>
             {% endif %}
             {% endif %}

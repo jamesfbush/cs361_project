@@ -25,7 +25,7 @@ def load_csv(filename):
 			if rowCount == 0:
 				for col in row[0].split(','):
 					if col not in taskEntry.keys():
-						print( "NOT CORRECT")
+						print( "NOT CORRECT",col)
 						return False
 					taskEntry[col] = ''
 				rowCount += 1
@@ -35,6 +35,7 @@ def load_csv(filename):
 				# Iterate through column values, map to dict
 				for col in range(len(row)):
 					keys = list(taskEntry.keys())
+					print("\nkeys",keys,"\ncol",col,"\nrow",row)
 					taskEntry[keys[col]] = row[col]
 				# Add the entry to the tasksDict
 				tasksDict['tasks'].append(taskEntry)	
