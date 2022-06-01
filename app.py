@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify, make_response, redirect, url_for
 from werkzeug.utils import secure_filename
 from flask_sqlalchemy import SQLAlchemy 
-from dotenv import load_dotenv, find_dotenv
 from model import Clients, Projects, Employees, Tasks, prepopulateDatabase, getSesssion
 from upload import allowed_file, load_csv
 from datetime import datetime as dt
@@ -12,30 +11,32 @@ import subprocess # Call to chart_ms
 import json 
 import time as tm
 
+###############################
 # ---------- CONFIG ----------
+###############################
 
 # Flask object
 app = Flask(__name__)
 
-# Configure, delcare, and prepopulate database 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database/timeTrack.db' # SQLite
-# app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql://{user}:{passwd}@{host}/{db}' # MySQL
+# Configure, delcare, and prepopulate SQLite database 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database/timeTrack.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 prepopulateDatabase()
 
 # Declare host name and port
-host = '0.0.0.0'#'localhost'
+host = 'localhost'
 port = 5000
 
 # For uploads, configure folder, allowed filetype, and max size
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'csv'} #'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 #max size is 16 kb
+ALLOWED_EXTENSIONS = {'csv'} 
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 # i.e., max size is 16 kb
 
-
+###############################
 # ---------- HELPERS ----------
+###############################
+
 def mapStringToEntity(entity):
     """For CRUD workflow.
     Map passed entity to an object in db model.
@@ -92,6 +93,7 @@ def allowed_file(filename):
 	"""
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 def getChartFromMS(graphingPayload):
     """For reports/graphing workflow. 
     Create graphingPayload from passed dict, save to json, obtain
@@ -121,9 +123,9 @@ def getChartFromMS(graphingPayload):
 
     return img
 
-
-# ---------- ROUTES ---------- 
-
+###############################
+# ---------- ROUTES -----------
+###############################
 
 # ---------- UI - Main ---------- 
 @app.route('/',methods=["GET"])
@@ -242,7 +244,6 @@ def createEntity(entity):
 
     # UI - landing page 
     if request.method == "GET":
-        # results = Projects.query.all()
         columns = Tasks.__table__.columns.keys() 
         return render_template("create.j2", entity=entity.title(), data=[]) #data=[columns, results] 
 
@@ -406,18 +407,17 @@ def appFaq():
 # ---------- UI - Reports ----------
 @app.route('/reports',methods=["GET"])
 def reports():
-    # Notes
-    # consider adding granularity 
-    # supports:  
-    #   tasks by project: 'http://localhost:5000/reports/tasks?projectId=1'
+    """Generate report, calling graphing microservice. 
+    Supports:  
+
+    tasks by project: 'http://localhost:5000/reports?reportEntity=tasks&projectId=2'
+    """
 
     # Landing page
     if request.method == "GET" and len(request.args) == 0:
-        #tables = db.engine.table_names()
         return render_template("reports.j2", entity="reports", reportEntity=None)
 
     # Specific reports
-    # Request format: http://localhost:5000/reports?entity=tasks&projectId=2
     elif request.method == "GET" and len(request.args) >= 1: 
 
         # Extract entity from URL          
@@ -449,9 +449,6 @@ def reports():
                             "x_axis_label": "Date",
                             "y_axis_label": "Hours",
                             }
-
-        # Call graphing service to generate image in-memory                
-        # img = serveChartInMemory(graphingPayload)
 
         # see getChartFromMS
         img = getChartFromMS(graphingPayload)
@@ -496,6 +493,7 @@ def upload_file(entity="upload"):
     Save valid file and return success message, if success. 
     """
     entity = "upload"
+    # Landing page
     if request.method == 'GET':
         return render_template('upload.j2', entity=entity)
     elif request.method == 'POST':
@@ -524,7 +522,6 @@ def upload_file(entity="upload"):
 
                 # Attempt process 
                 for i in csv['tasks']:
-
                     requests.post(f'http://{host}:{port}/api/tasks/create?', json=i)
 
                 return render_template("upload.j2", entity=entity, success=True, filename=csv)
@@ -532,11 +529,15 @@ def upload_file(entity="upload"):
                 error = "CSV not in correct format"
                 return render_template("upload.j2", entity=entity, error=error) 
 
-# Set darkMode
+# ---------- Set Theme --------------
 @app.route("/set")
 @app.route("/set/<theme>")
 def set_theme(theme="light"):
-    res = make_response(redirect("/")) #url_for("entityLanding")))
+    """Upon request, set CSS to requested theme.
+    # Adapted from: https://replit.com/@BD103/Dark-Mode-Flask
+    """
+
+    res = make_response(redirect("/")) 
     res.set_cookie("theme", theme)
     return res
 

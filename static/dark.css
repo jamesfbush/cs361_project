@@ -186,6 +186,7 @@ tr:nth-child(even) {
 
 .form-row > input[type=text] {
   background-color: #28282A;
+  color: #d6d6d6;
   width: 50%;
   padding: 10px 15px;
   margin: 8px 0;
@@ -193,12 +194,16 @@ tr:nth-child(even) {
 }
 
 .form-row > input[type=number] {
+  color: #d6d6d6;
+  background-color: #28282A;
   width: 50%;
   padding: 10px 15px;
   margin: 8px 0;
   box-sizing: border-box;
 }
 .form-row > input[type=date] {
+  color: #d6d6d6;
+  background-color: #28282A;
   width: 50%;
   padding: 10px 15px;
   margin: 8px 0;

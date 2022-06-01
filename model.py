@@ -1,24 +1,11 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from dotenv import load_dotenv, find_dotenv
 import os 
 
 
 app = Flask(__name__)
 
 # --------------------Database Connection--------------------
-
-def mySqlConnection():
-    """
-    Create mySQL connection with credentials in dotenv in root directory file.
-    """
-    load_dotenv(find_dotenv())
-    host = os.environ.get("DBHOST")
-    user = os.environ.get("DBUSER")
-    passwd = os.environ.get("DBPW")
-    db = os.environ.get("DB")
-    # MySQL
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql://{user}:{passwd}@{host}/{db}'
 
 def sqlLiteConnection():
     """

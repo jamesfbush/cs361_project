@@ -10,3 +10,7 @@ env/
 # Flask stuff:
 instance/
 .webassets-cache
+
+#old files
+
+oldFiles/
