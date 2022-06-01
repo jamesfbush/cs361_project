@@ -42,6 +42,7 @@ ul.topNavbar {
 }
 
 ul > li {
+  color: #e2e2e2;
   float: inline-start;
   /* border-right: 2px solid rgb(231, 240, 96); */
 }
@@ -72,6 +73,10 @@ li.active > a {
   background-color: #fffefe;
 }
 
+ol > li {
+  color: #e2e2e2;
+}
+
 body {
   background-color:#28282A;  
   padding: 1em;
@@ -84,25 +89,27 @@ body {
   border-bottom-right-radius: 10px;
   /* border-radius: 10px; */
   padding: 20px; 
-  background-color: #e1e1e1;
+  background-color: #8D8D91;
 }
 
 table {
   padding: 10px;
   border: 1px solid #e2e1e1;
-  background-color: #fffefe;
+  background-color: #505053;
   text-align: left;
 }
 th {
+  color:#e2e2e2;
   border-bottom: 1px solid #e2e1e1;
   text-align: left;
 }
 
 td {
+  color:#e2e2e2;
   padding: 10px
 }
 tr:nth-child(even) {
-  background-color: #e2e1e1;
+  background-color: #28282A;
 }
 
 .display-container {
@@ -131,7 +138,7 @@ tr:nth-child(even) {
   width: 275px;
   height: 171.875px;
   text-align: center;
-  background-color: #505053;
+  background-color: #3C3C3E;
   margin: 20px;
   padding: 25px;
   border-radius: 5px;
@@ -140,7 +147,7 @@ tr:nth-child(even) {
 .options-container {
   text-align: center;
   max-width: 1700px;
-  background-color: #3C3C3E;
+  background-color: #505053;
   border: 1px solid #e2e2e2;
   padding: 20px;
 }
@@ -156,7 +163,7 @@ tr:nth-child(even) {
   width: 90%;
   height: 90%;
   text-align: left;
-  background-color: #fffefe;
+  background-color: #3C3C3E;
   margin: 15px;
   padding: 15px;
   border-radius: 5px;
@@ -171,13 +178,14 @@ tr:nth-child(even) {
 }
 
 .form-row > label {
-  border: 10px solid white;
+  border: 10px solid #3C3C3E;
   font-weight:bolder;
-  color: #56565A;
+  color: #d6d6d6;
   font-size: .9rem;
 }
 
 .form-row > input[type=text] {
+  background-color: #28282A;
   width: 50%;
   padding: 10px 15px;
   margin: 8px 0;
@@ -198,7 +206,7 @@ tr:nth-child(even) {
 }
 
 .submit-button {
-  background-color: white;  
+  background-color: #3C3C3E;  
   font-family: sans-serif;
   color:  #FF6201;
   padding: 10px;
