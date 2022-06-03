@@ -95,7 +95,7 @@ content-type: application/json
 }
 
 ### Find the Employee
-GET http://localhost:5000/api/employees/retrieve?eeFirstName=Kenneth
+GET http://localhost:5000/api/employees/retrieve?employeeFirstName=Kenneth
 
 
 ### Update Clients 
@@ -172,9 +172,6 @@ content-type: application/json
     "taskTime":4.6,
     "employeeId":2
 }
-
-### Testing uploads
-
 
 
 
